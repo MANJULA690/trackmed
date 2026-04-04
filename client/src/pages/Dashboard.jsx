@@ -8,6 +8,7 @@ import {
 import { medicineAPI, alertAPI, predictionAPI } from "../api/services";
 import { useAuth } from "../context/AuthContext";
 import { StatCard, PageLoader } from "../components/ui";
+// import { formatDate, getExpiryLabel, formatCurrency } from "../utils/helpers";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend, Filler);
 
@@ -30,27 +31,51 @@ export default function Dashboard() {
         setStats(s.data.stats);
         setAlerts(a.data.alerts);
         setPreds(p.data.predictions);
-      } finally { setLoading(false); }
+      } finally {
+        setLoading(false);
+      }
     };
     load();
   }, []);
 
   if (loading) return <PageLoader />;
 
+  // Build chart data from stockMovement
   const movementDays = [...new Set((stats?.stockMovement || []).map(d => d._id.date))].sort();
-  const issued   = movementDays.map(day => stats.stockMovement.find(d => d._id.date === day && d._id.type === "issued")?.total || 0);
-  const received = movementDays.map(day => stats.stockMovement.find(d => d._id.date === day && d._id.type === "received")?.total || 0);
+  const issued   = movementDays.map(day => {
+    const found = stats.stockMovement.find(d => d._id.date === day && d._id.type === "issued");
+    return found?.total || 0;
+  });
+  const received = movementDays.map(day => {
+    const found = stats.stockMovement.find(d => d._id.date === day && d._id.type === "received");
+    return found?.total || 0;
+  });
 
   const lineData = {
-    labels: movementDays.map(d => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short" })),
+    labels: movementDays.map(d => {
+      const dt = new Date(d);
+      return dt.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+    }),
     datasets: [
-      { label: "Issued", data: issued, borderColor: "#00B5AD", backgroundColor: "rgba(0,181,173,0.08)", fill: true, tension: 0.45, pointRadius: 4, pointBackgroundColor: "#00B5AD", borderWidth: 2.5 },
-      { label: "Received", data: received, borderColor: "#6366f1", backgroundColor: "rgba(99,102,241,0.06)", fill: true, tension: 0.45, pointRadius: 4, pointBackgroundColor: "#6366f1", borderWidth: 2.5 },
+      {
+        label: "Issued",
+        data: issued,
+        borderColor: "#00B5AD",
+        backgroundColor: "rgba(0,181,173,0.08)",
+        fill: true, tension: 0.4, pointRadius: 3, borderWidth: 2,
+      },
+      {
+        label: "Received",
+        data: received,
+        borderColor: "#6366f1",
+        backgroundColor: "rgba(99,102,241,0.05)",
+        fill: true, tension: 0.4, pointRadius: 3, borderWidth: 2,
+      },
     ],
   };
 
   const doughnutData = {
-    labels: ["Healthy", "Low Stock", "Critical"],
+    labels: ["Healthy", "Low Stock", "Critical/Expired"],
     datasets: [{
       data: [
         Math.max(0, (stats?.totalMedicines || 0) - (stats?.lowStock || 0) - (stats?.outOfStock || 0)),
@@ -58,136 +83,108 @@ export default function Dashboard() {
         (stats?.outOfStock || 0) + (stats?.expiredCount || 0),
       ],
       backgroundColor: ["#00B5AD", "#f59e0b", "#ef4444"],
-      borderWidth: 0, hoverOffset: 6,
+      borderWidth: 0,
+      hoverOffset: 4,
     }],
   };
 
   const barData = {
     labels: preds.slice(0, 5).map(p => p.medicineName.split(" ").slice(0, 2).join(" ")),
     datasets: [{
+      label: "Predicted 30-day demand",
       data: preds.slice(0, 5).map(p => p.predictedNext30Days),
-      backgroundColor: ["rgba(0,181,173,0.85)", "rgba(99,102,241,0.85)", "rgba(245,158,11,0.85)", "rgba(16,185,129,0.85)", "rgba(59,130,246,0.85)"],
-      borderRadius: 8, borderSkipped: false,
+      backgroundColor: ["#00B5AD","#6366f1","#f59e0b","#10b981","#3b82f6"],
+      borderRadius: 6,
+      borderSkipped: false,
     }],
   };
 
-  const baseChartOpts = {
+  const chartOpts = {
     responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { display: false }, tooltip: { backgroundColor: "#0f172a", padding: 10, cornerRadius: 8, titleFont: { family: "'Plus Jakarta Sans'" }, bodyFont: { family: "'Plus Jakarta Sans'" } } },
+    plugins: { legend: { display: false } },
     scales: {
-      x: { grid: { color: "rgba(0,0,0,0.04)", drawBorder: false }, ticks: { color: "#94a3b8", font: { size: 11, family: "'Plus Jakarta Sans'" } } },
-      y: { grid: { color: "rgba(0,0,0,0.04)", drawBorder: false }, ticks: { color: "#94a3b8", font: { size: 11, family: "'Plus Jakarta Sans'" } } },
+      x: { grid: { color: "rgba(0,0,0,0.04)" }, ticks: { color: "#9ca3af", font: { size: 11 } } },
+      y: { grid: { color: "rgba(0,0,0,0.04)" }, ticks: { color: "#9ca3af", font: { size: 11 } } },
     },
   };
 
-  const greet = () => { const h = new Date().getHours(); return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening"; };
-
-  const ALERT_ICONS = { low_stock: "📦", out_of_stock: "🚫", expiry_warning: "⏳", expiry_critical: "🔴", expired: "💀" };
+  const greet = () => {
+    const h = new Date().getHours();
+    if (h < 12) return "Good morning";
+    if (h < 17) return "Good afternoon";
+    return "Good evening";
+  };
 
   return (
     <div>
-      {/* Greeting header */}
-      <div className="opacity-0 animate-fade-up" style={{ marginBottom: 28, animationFillMode: "forwards" }}>
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-          <div>
-            <h1 style={{ fontFamily: "'Outfit',sans-serif", fontSize: 28, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.5px" }}>
-              {greet()}, {user?.name?.split(" ")[0]} 👋
-            </h1>
-            <p style={{ fontSize: 13, color: "#94a3b8", marginTop: 4 }}>
-              {new Date().toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-            </p>
-          </div>
-          {/* Quick action */}
-          <button onClick={() => navigate("/inventory")} className="btn-primary">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add Medicine
-          </button>
-        </div>
-
-        {/* Quick stat strip */}
-        {stats?.expiringIn7 > 0 && (
-          <div style={{
-            marginTop: 14, padding: "10px 16px",
-            background: "linear-gradient(135deg, #fff5f5, #fff)",
-            border: "1px solid #fecaca", borderRadius: 12,
-            display: "flex", alignItems: "center", gap: 10,
-            fontSize: 13, color: "#991b1b",
-          }}>
-            <span>🔴</span>
-            <strong>{stats.expiringIn7}</strong> medicine{stats.expiringIn7 > 1 ? "s" : ""} expiring within 7 days —&nbsp;
-            <button onClick={() => navigate("/alerts")} style={{ color: "#dc2626", fontWeight: 600, textDecoration: "underline", background: "none", border: "none", cursor: "pointer", fontSize: 13 }}>
-              view alerts →
-            </button>
-          </div>
-        )}
+      {/* Header */}
+      <div className="mb-7 opacity-0 animate-fade-up" style={{ animationFillMode: "forwards" }}>
+        <h1 className="font-display text-2xl font-bold text-gray-900 tracking-tight">
+          {greet()}, {user?.name?.split(" ")[0]} 👋
+        </h1>
+        <p className="text-sm text-gray-400 mt-0.5">
+          {new Date().toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+        </p>
       </div>
 
       {/* Stat Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 20 }}>
-        <StatCard label="Total medicines" value={stats?.totalMedicines?.toLocaleString() || "0"}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <StatCard label="Total medicines tracked" value={stats?.totalMedicines?.toLocaleString() || "0"}
           color="teal" delay="anim-delay-1"
-          icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>}
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>}
         />
-        <StatCard label="Expiring in 30 days" value={stats?.expiringIn30 || "0"}
-          sublabel={`${stats?.expiringIn7 || 0} critical (≤7 days)`}
+        <StatCard label="Expiring within 30 days" value={stats?.expiringIn30 || "0"}
           color="amber" delay="anim-delay-2"
-          icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>}
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>}
         />
-        <StatCard label="Low / Out of stock" value={`${stats?.lowStock || 0} / ${stats?.outOfStock || 0}`}
-          sublabel="Low stock / Out of stock"
+        <StatCard label="Low / out of stock" value={`${stats?.lowStock || 0} / ${stats?.outOfStock || 0}`}
           color="red" delay="anim-delay-3"
-          icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>}
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>}
         />
         <StatCard label="Unread alerts" value={stats?.unreadAlerts || "0"}
           color="blue" delay="anim-delay-4"
-          icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>}
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>}
         />
       </div>
 
       {/* Charts row */}
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, marginBottom: 16 }}>
-        {/* Line chart */}
-        <div className="chart-panel opacity-0 animate-fade-up anim-delay-2" style={{ animationFillMode: "forwards" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+        {/* Stock movement line chart */}
+        <div className="lg:col-span-2 card p-5 opacity-0 animate-fade-up anim-delay-2" style={{ animationFillMode: "forwards" }}>
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <div className="chart-title">Stock Movement</div>
-              <div className="chart-subtitle">Last 7 days — issued vs received</div>
+              <h3 className="font-display font-bold text-gray-900 text-sm">Stock Movement</h3>
+              <p className="text-xs text-gray-400">Last 7 days — issued vs received</p>
             </div>
-            <div style={{ display: "flex", gap: 14, fontSize: 11, color: "#94a3b8" }}>
-              <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                <span style={{ width: 10, height: 10, borderRadius: 3, background: "#00B5AD", display: "inline-block" }}/>Issued
-              </span>
-              <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                <span style={{ width: 10, height: 10, borderRadius: 3, background: "#6366f1", display: "inline-block" }}/>Received
-              </span>
+            <div className="flex items-center gap-3 text-xs text-gray-400">
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-brand-500 inline-block"/>Issued</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-indigo-500 inline-block"/>Received</span>
             </div>
           </div>
-          <div style={{ height: 210 }}>
-            <Line data={lineData} options={baseChartOpts} />
+          <div className="h-[200px]">
+            <Line data={lineData} options={chartOpts} />
           </div>
         </div>
 
         {/* Doughnut */}
-        <div className="chart-panel opacity-0 animate-fade-up anim-delay-3" style={{ animationFillMode: "forwards" }}>
-          <div className="chart-title" style={{ marginBottom: 4 }}>Stock Health</div>
-          <div className="chart-subtitle" style={{ marginBottom: 16 }}>Overall inventory status</div>
-          <div style={{ height: 160, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div className="card p-5 opacity-0 animate-fade-up anim-delay-3" style={{ animationFillMode: "forwards" }}>
+          <h3 className="font-display font-bold text-gray-900 text-sm mb-1">Stock Health</h3>
+          <p className="text-xs text-gray-400 mb-4">Overall inventory status</p>
+          <div className="h-[150px] flex items-center justify-center">
             <Doughnut data={doughnutData} options={{
               responsive: true, maintainAspectRatio: false,
-              plugins: { legend: { display: false }, tooltip: { backgroundColor: "#0f172a", cornerRadius: 8 } },
-              cutout: "72%",
+              plugins: { legend: { display: false } },
+              cutout: "70%",
             }} />
           </div>
-          <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
-            {["Healthy", "Low Stock", "Critical"].map((l, i) => (
-              <div key={l} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12 }}>
-                <span style={{ display: "flex", alignItems: "center", gap: 8, color: "#6b7280" }}>
-                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: ["#00B5AD","#f59e0b","#ef4444"][i], display: "inline-block" }}/>
+          <div className="space-y-1.5 mt-4">
+            {["Healthy","Low Stock","Critical/Expired"].map((l, i) => (
+              <div key={l} className="flex items-center justify-between text-xs">
+                <span className="flex items-center gap-2 text-gray-500">
+                  <span className="w-2 h-2 rounded-full inline-block" style={{ background: ["#00B5AD","#f59e0b","#ef4444"][i] }}/>
                   {l}
                 </span>
-                <span style={{ fontWeight: 700, color: "#374151", fontFamily: "'Outfit',sans-serif" }}>
-                  {doughnutData.datasets[0].data[i]}
-                </span>
+                <span className="font-medium text-gray-700">{doughnutData.datasets[0].data[i]}</span>
               </div>
             ))}
           </div>
@@ -195,32 +192,29 @@ export default function Dashboard() {
       </div>
 
       {/* Bottom row */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-        {/* Alerts */}
-        <div className="chart-panel opacity-0 animate-fade-up anim-delay-3" style={{ animationFillMode: "forwards" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-            <div className="chart-title">Active Alerts</div>
-            <button onClick={() => navigate("/alerts")} style={{
-              fontSize: 12, color: "#00B5AD", fontWeight: 600,
-              background: "none", border: "none", cursor: "pointer",
-            }}>View all →</button>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Active alerts */}
+        <div className="card p-5 opacity-0 animate-fade-up anim-delay-3" style={{ animationFillMode: "forwards" }}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-display font-bold text-gray-900 text-sm">Active Alerts</h3>
+            <button onClick={() => navigate("/alerts")} className="text-xs text-brand-500 hover:text-brand-600 font-medium">View all →</button>
           </div>
           {alerts.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "30px 0", color: "#94a3b8", fontSize: 13 }}>🎉 No active alerts</div>
+            <div className="text-center py-8 text-gray-400 text-sm">🎉 No active alerts</div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {alerts.map(a => (
-                <div key={a._id} className="alert-item" onClick={() => navigate("/alerts")}>
-                  <span style={{ fontSize: 16, flexShrink: 0 }}>{ALERT_ICONS[a.alertType] || "⚠️"}</span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 12.5, fontWeight: 600, color: "#1e293b", marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {a.medicineName}
-                    </p>
-                    <p style={{ fontSize: 11, color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {a.message}
-                    </p>
+            <div className="space-y-2">
+              {alerts.map((a) => (
+                <div key={a._id} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer" onClick={() => navigate("/alerts")}>
+                  <span className={`mt-0.5 w-2 h-2 rounded-full flex-shrink-0 ${
+                    a.severity === "critical" ? "bg-red-500" : a.severity === "warning" ? "bg-amber-400" : "bg-blue-400"
+                  }`}/>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-gray-800 truncate">{a.medicineName}</p>
+                    <p className="text-xs text-gray-400 mt-0.5 truncate">{a.message}</p>
                   </div>
-                  <span className={a.severity === "critical" ? "pill-critical" : "pill-low"} style={{ flexShrink: 0 }}>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${
+                    a.severity === "critical" ? "pill-critical" : "pill-low"
+                  }`}>
                     {a.alertType.replace(/_/g, " ")}
                   </span>
                 </div>
@@ -229,27 +223,25 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Predictions bar */}
-        <div className="chart-panel opacity-0 animate-fade-up anim-delay-4" style={{ animationFillMode: "forwards" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
+        {/* Demand predictions bar */}
+        <div className="card p-5 opacity-0 animate-fade-up anim-delay-4" style={{ animationFillMode: "forwards" }}>
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <div className="chart-title">Demand Predictions</div>
-              <div className="chart-subtitle">Predicted units — next 30 days</div>
+              <h3 className="font-display font-bold text-gray-900 text-sm">Demand Predictions</h3>
+              <p className="text-xs text-gray-400">Predicted units needed — next 30 days</p>
             </div>
-            <button onClick={() => navigate("/predictions")} style={{
-              fontSize: 12, color: "#00B5AD", fontWeight: 600,
-              background: "none", border: "none", cursor: "pointer",
-            }}>Details →</button>
+            <button onClick={() => navigate("/predictions")} className="text-xs text-brand-500 hover:text-brand-600 font-medium">Details →</button>
           </div>
           {preds.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "30px 0", color: "#94a3b8", fontSize: 13 }}>No prediction data yet</div>
+            <div className="text-center py-8 text-gray-400 text-sm">No prediction data yet</div>
           ) : (
-            <div style={{ height: 200 }}>
+            <div className="h-[180px]">
               <Bar data={barData} options={{
-                ...baseChartOpts,
+                ...chartOpts,
+                plugins: { legend: { display: false } },
                 scales: {
-                  x: { grid: { display: false }, ticks: { color: "#94a3b8", font: { size: 10, family: "'Plus Jakarta Sans'" } } },
-                  y: { grid: { color: "rgba(0,0,0,0.04)" }, ticks: { color: "#94a3b8", font: { size: 10, family: "'Plus Jakarta Sans'" } } },
+                  x: { grid: { display: false }, ticks: { color: "#9ca3af", font: { size: 10 } } },
+                  y: { grid: { color: "rgba(0,0,0,0.04)" }, ticks: { color: "#9ca3af", font: { size: 10 } } },
                 },
               }} />
             </div>
