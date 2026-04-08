@@ -6,8 +6,8 @@ import toast from "react-hot-toast";
 export default function Login() {
   const [form, setForm]       = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
-  const { login }  = useAuth();
-  const navigate   = useNavigate();
+  const { login } = useAuth();
+  const navigate  = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,145 +17,220 @@ export default function Login() {
       toast.success("Welcome back!");
       navigate("/");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Login failed. Check credentials.");
+      toast.error(err.response?.data?.message || "Invalid credentials");
     } finally {
       setLoading(false);
     }
   };
 
-  const fill = (email, password) => setForm({ email, password });
-
   return (
-    <div className="min-h-screen bg-navy flex">
-      {/* Left — Branding */}
-      <div className="hidden lg:flex flex-col justify-between w-[480px] p-12 bg-navy border-r border-white/10">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-brand-500 flex items-center justify-center">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+    <div style={{
+      minHeight: "100vh", display: "flex",
+      background: "linear-gradient(135deg, #061628 0%, #0d2d4e 50%, #091e36 100%)",
+      position: "relative", overflow: "hidden",
+    }}>
+      {/* Decorative blobs */}
+      <div style={{
+        position: "absolute", top: -120, left: -120, width: 500, height: 500,
+        borderRadius: "50%",
+        background: "radial-gradient(circle, rgba(0,181,173,0.12) 0%, transparent 70%)",
+        pointerEvents: "none",
+      }} />
+      <div style={{
+        position: "absolute", bottom: -80, right: -80, width: 400, height: 400,
+        borderRadius: "50%",
+        background: "radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 70%)",
+        pointerEvents: "none",
+      }} />
+
+      {/* Left panel — branding */}
+      <div style={{
+        width: 480, flexShrink: 0,
+        padding: "48px 52px",
+        display: "flex", flexDirection: "column", justifyContent: "space-between",
+        borderRight: "1px solid rgba(255,255,255,0.06)",
+      }} className="hidden lg:flex">
+        {/* Logo */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{
+            width: 42, height: 42, borderRadius: 12,
+            background: "linear-gradient(135deg, #00C5BC, #007f7b)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 4px 20px rgba(0,181,173,0.4)",
+          }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2">
               <path d="M12 2L2 7l10 5 10-5-10-5z"/>
               <path d="M2 17l10 5 10-5"/>
               <path d="M2 12l10 5 10-5"/>
             </svg>
           </div>
-          <span className="font-display text-xl text-white font-bold tracking-tight">
-            Track<span className="text-brand-400">Med</span>
-          </span>
+          <div>
+            <div style={{ fontFamily: "'Outfit',sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-0.3px" }}>
+              Track<span style={{ color: "#4dd4cf" }}>Med</span>
+            </div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em" }}>PHARMACY SYSTEM</div>
+          </div>
         </div>
 
+        {/* Headline */}
         <div>
-          <h2 className="font-display text-4xl font-bold text-white leading-tight mb-4">
-            Smart medicine<br />stock management
+          <h2 style={{
+            fontFamily: "'Outfit',sans-serif", fontSize: 42, fontWeight: 800,
+            color: "#fff", lineHeight: 1.15, letterSpacing: "-1px", marginBottom: 20,
+          }}>
+            Smarter<br />
+            <span style={{ color: "#4dd4cf" }}>medicine</span><br />
+            management.
           </h2>
-          <p className="text-white/50 text-sm leading-relaxed mb-8">
-            Track inventory, predict demand, and get automatic alerts for expiring medicines and low stock — all in one place.
+          <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 14, lineHeight: 1.7, marginBottom: 36 }}>
+            Track inventory, predict demand, and get automatic alerts — all in one platform built for hospital pharmacies.
           </p>
 
-          <div className="space-y-3">
-            {[
-              { icon: "🔔", text: "Auto alerts for low stock & expiry" },
-              { icon: "📊", text: "ML-powered demand prediction" },
-              { icon: "🔍", text: "Search & filter 2,800+ medicines" },
-            ].map((f) => (
-              <div key={f.text} className="flex items-center gap-3 text-white/60 text-sm">
-                <span className="text-base">{f.icon}</span>
-                {f.text}
-              </div>
-            ))}
-          </div>
+          {/* Feature list */}
+          {/* {[
+            { icon: "🔔", text: "Auto-alerts for low stock & expiry" },
+            { icon: "📊", text: "ML-powered 30-day demand prediction" },
+            { icon: "💊", text: "Manage 2,800+ medicines from Kaggle dataset" },
+            { icon: "🔒", text: "Role-based access for pharmacists & admins" },
+          ].map(f => (
+            <div key={f.text} style={{
+              display: "flex", alignItems: "center", gap: 12,
+              padding: "10px 0",
+              borderBottom: "1px solid rgba(255,255,255,0.05)",
+              color: "rgba(255,255,255,0.55)", fontSize: 13,
+            }}>
+              <span style={{ fontSize: 16, width: 24 }}>{f.icon}</span>
+              {f.text}
+            </div>
+          ))} */}
         </div>
 
-        <p className="text-white/25 text-xs">
-          TrackMed v1.0 · 6th Semester Project
-        </p>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)" }}>
+          {/* TrackMed v1.0 · 6th Semester Project */}
+        </div>
       </div>
 
-      {/* Right — Login Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="w-full max-w-sm">
-          {/* Mobile logo */}
-          <div className="flex items-center gap-2 mb-8 lg:hidden">
-            <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                <path d="M2 17l10 5 10-5"/>
-                <path d="M2 12l10 5 10-5"/>
-              </svg>
-            </div>
-            <span className="font-display text-lg text-white font-bold">Track<span className="text-brand-400">Med</span></span>
-          </div>
+      {/* Right panel — form */}
+      <div style={{
+        flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 32,
+      }}>
+        <div style={{ width: "100%", maxWidth: 400 }} className="animate-fade-up" style2={{ animationFillMode: "forwards" }}>
 
-          <div className="mb-8">
-            <h1 className="font-display text-2xl font-bold text-white mb-1">Sign in</h1>
-            <p className="text-white/40 text-sm">Enter your credentials to access the dashboard</p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-white/60 mb-1.5">Email address</label>
-              <input
-                type="email"
-                value={form.email}
-                onChange={e => setForm({ ...form, email: e.target.value })}
-                placeholder="admin@trackmed.com"
-                required
-                className="w-full px-3.5 py-2.5 rounded-lg bg-white/5 border border-white/10
-                           text-white placeholder-white/25 text-sm focus:outline-none
-                           focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-all"
-              />
+          {/* Glass card */}
+          <div style={{
+            background: "rgba(255,255,255,0.05)",
+            backdropFilter: "blur(16px)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: 24,
+            padding: "36px 36px",
+            boxShadow: "0 24px 60px rgba(0,0,0,0.3)",
+          }}>
+            <div style={{ marginBottom: 28 }}>
+              <h1 style={{ fontFamily: "'Outfit',sans-serif", fontSize: 26, fontWeight: 800, color: "#fff", marginBottom: 6 }}>
+                Sign in
+              </h1>
+              <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 13.5 }}>
+                Enter your credentials to continue
+              </p>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-white/60 mb-1.5">Password</label>
-              <input
-                type="password"
-                value={form.password}
-                onChange={e => setForm({ ...form, password: e.target.value })}
-                placeholder="••••••••"
-                required
-                className="w-full px-3.5 py-2.5 rounded-lg bg-white/5 border border-white/10
-                           text-white placeholder-white/25 text-sm focus:outline-none
-                           focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-all"
-              />
-            </div>
+            <form onSubmit={handleSubmit}>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.55)", marginBottom: 7, letterSpacing: "0.04em" }}>
+                  EMAIL ADDRESS
+                </label>
+                <input
+                  type="email" required
+                  value={form.email}
+                  onChange={e => setForm({ ...form, email: e.target.value })}
+                  placeholder="admin@trackmed.com"
+                  style={{
+                    width: "100%", padding: "11px 14px",
+                    background: "rgba(255,255,255,0.07)",
+                    border: "1.5px solid rgba(255,255,255,0.12)",
+                    borderRadius: 12, color: "#fff", fontSize: 14,
+                    outline: "none", transition: "all 0.15s",
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  }}
+                  onFocus={e => { e.target.style.borderColor = "#00B5AD"; e.target.style.background = "rgba(0,181,173,0.08)"; }}
+                  onBlur={e => { e.target.style.borderColor = "rgba(255,255,255,0.12)"; e.target.style.background = "rgba(255,255,255,0.07)"; }}
+                />
+              </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-medium text-sm
-                         rounded-lg transition-all duration-150 disabled:opacity-60 flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                  </svg>
-                  Signing in...
-                </>
-              ) : "Sign in →"}
-            </button>
-          </form>
+              <div style={{ marginBottom: 24 }}>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.55)", marginBottom: 7, letterSpacing: "0.04em" }}>
+                  PASSWORD
+                </label>
+                <input
+                  type="password" required
+                  value={form.password}
+                  onChange={e => setForm({ ...form, password: e.target.value })}
+                  placeholder="••••••••"
+                  style={{
+                    width: "100%", padding: "11px 14px",
+                    background: "rgba(255,255,255,0.07)",
+                    border: "1.5px solid rgba(255,255,255,0.12)",
+                    borderRadius: 12, color: "#fff", fontSize: 14,
+                    outline: "none", transition: "all 0.15s",
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  }}
+                  onFocus={e => { e.target.style.borderColor = "#00B5AD"; e.target.style.background = "rgba(0,181,173,0.08)"; }}
+                  onBlur={e => { e.target.style.borderColor = "rgba(255,255,255,0.12)"; e.target.style.background = "rgba(255,255,255,0.07)"; }}
+                />
+              </div>
 
-          {/* Quick fill demo credentials */}
-          <div className="mt-6 p-4 rounded-xl bg-white/5 border border-white/10">
-            <p className="text-white/40 text-xs mb-2.5 font-medium">Demo credentials</p>
-            <div className="space-y-1.5">
-              <button
-                type="button"
-                onClick={() => fill("admin@trackmed.com", "Admin@123")}
-                className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 transition-colors group"
-              >
-                <span className="text-white/70 text-xs font-medium group-hover:text-white transition-colors">Admin</span>
-                <span className="text-white/30 text-xs ml-2">admin@trackmed.com</span>
+              <button type="submit" disabled={loading} style={{
+                width: "100%", padding: "13px",
+                background: loading ? "#005f5c" : "linear-gradient(135deg, #00C5BC, #009990)",
+                color: "#fff", border: "none", borderRadius: 12,
+                fontFamily: "'Outfit',sans-serif", fontSize: 15, fontWeight: 700,
+                cursor: loading ? "not-allowed" : "pointer",
+                transition: "all 0.2s",
+                boxShadow: "0 4px 16px rgba(0,181,173,0.35)",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+              }}>
+                {loading ? (
+                  <>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="animate-spin">
+                      <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="3" opacity="0.3"/>
+                      <path fill="white" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                    </svg>
+                    Signing in...
+                  </>
+                ) : "Sign in →"}
               </button>
-              <button
-                type="button"
-                onClick={() => fill("pharmacist@trackmed.com", "Pharma@123")}
-                className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 transition-colors group"
-              >
-                <span className="text-white/70 text-xs font-medium group-hover:text-white transition-colors">Pharmacist</span>
-                <span className="text-white/30 text-xs ml-2">pharmacist@trackmed.com</span>
-              </button>
+            </form>
+
+            {/* Demo creds */}
+            <div style={{
+              marginTop: 22, padding: "14px 16px",
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 14,
+            }}>
+              <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", marginBottom: 10 }}>
+                DEMO CREDENTIALS
+              </p>
+              {[
+                { role: "Admin", email: "admin@trackmed.com", pw: "Admin@123" },
+                { role: "Pharmacist", email: "pharmacist@trackmed.com", pw: "Pharma@123" },
+              ].map(c => (
+                <button key={c.role} type="button"
+                  onClick={() => setForm({ email: c.email, password: c.pw })}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    width: "100%", padding: "8px 10px", borderRadius: 10,
+                    background: "transparent", border: "none", cursor: "pointer",
+                    marginBottom: 4, transition: "background 0.15s",
+                    color: "rgba(255,255,255,0.6)",
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
+                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                >
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.8)" }}>{c.role}</span>
+                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "'JetBrains Mono',monospace" }}>{c.email}</span>
+                </button>
+              ))}
             </div>
           </div>
         </div>

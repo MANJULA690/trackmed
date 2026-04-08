@@ -1,35 +1,43 @@
 // ── Stat Card ──────────────────────────────────────────────────
-export function StatCard({ label, value, icon, trend, trendUp, color = "teal", delay = "" }) {
-  const colors = {
-    teal:  { bg: "bg-brand-50",   text: "text-brand-500",   border: "border-brand-100" },
-    amber: { bg: "bg-amber-50",   text: "text-amber-500",   border: "border-amber-100" },
-    red:   { bg: "bg-red-50",     text: "text-red-500",     border: "border-red-100" },
-    blue:  { bg: "bg-blue-50",    text: "text-blue-500",    border: "border-blue-100" },
-    green: { bg: "bg-emerald-50", text: "text-emerald-500", border: "border-emerald-100" },
+export function StatCard({ label, value, icon, trend, trendUp, color = "teal", delay = "", sublabel }) {
+  const configs = {
+    teal:  { iconBg: "linear-gradient(135deg,#d0f5f3,#a5eeeb)", iconColor: "#00857f", border: "stat-card-teal" },
+    amber: { iconBg: "linear-gradient(135deg,#fef3c7,#fde68a)", iconColor: "#b45309", border: "stat-card-amber" },
+    red:   { iconBg: "linear-gradient(135deg,#fee2e2,#fecaca)", iconColor: "#dc2626", border: "stat-card-red" },
+    blue:  { iconBg: "linear-gradient(135deg,#dbeafe,#bfdbfe)", iconColor: "#2563eb", border: "stat-card-blue" },
   };
-  const c = colors[color] || colors.teal;
+  const c = configs[color] || configs.teal;
+
   return (
     <div
-      className={`card card-lift p-5 opacity-0 animate-fade-up ${delay} border-t-2 ${c.border}`}
-      style={{ animationFillMode: "forwards" }}
+      className={`card card-hover opacity-0 animate-fade-up ${c.border} ${delay}`}
+      style={{ padding: "20px 22px", animationFillMode: "forwards" }}
     >
-      <div className="flex items-start justify-between mb-3">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${c.bg} ${c.text}`}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 }}>
+        <div style={{
+          width: 42, height: 42, borderRadius: 12,
+          background: c.iconBg,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          color: c.iconColor,
+        }}>
           {icon}
         </div>
         {trend && (
-          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-            trendUp ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"
-          }`}>
-            {trendUp ? "↑" : "↓"} {trend}
+          <span style={{
+            fontSize: 11, fontWeight: 700,
+            padding: "3px 8px", borderRadius: 20,
+            background: trendUp ? "#d1fae5" : "#fee2e2",
+            color: trendUp ? "#065f46" : "#991b1b",
+          }}>
+            {trendUp ? "▲" : "▼"} {trend}
           </span>
         )}
       </div>
-      <p className={`text-2xl font-display font-bold text-gray-900 leading-none mb-1 opacity-0 animate-num-pop ${delay}`}
-         style={{ animationFillMode: "forwards", animationDelay: `calc(${delay ? "0.1s" : "0s"} + 0.15s)` }}>
+      <div style={{ fontFamily: "'Outfit', sans-serif", fontSize: 28, fontWeight: 800, color: "#0f172a", lineHeight: 1.1, marginBottom: 4 }}>
         {value}
-      </p>
-      <p className="text-xs text-gray-400 font-medium mt-1">{label}</p>
+      </div>
+      <div style={{ fontSize: 12.5, color: "#64748b", fontWeight: 500 }}>{label}</div>
+      {sublabel && <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>{sublabel}</div>}
     </div>
   );
 }
@@ -37,33 +45,43 @@ export function StatCard({ label, value, icon, trend, trendUp, color = "teal", d
 // ── Page Header ────────────────────────────────────────────────
 export function PageHeader({ title, subtitle, actions }) {
   return (
-    <div className="flex items-start justify-between mb-7 opacity-0 animate-fade-up" style={{ animationFillMode: "forwards" }}>
+    <div style={{
+      display: "flex", alignItems: "flex-start", justifyContent: "space-between",
+      marginBottom: 26,
+    }}
+      className="opacity-0 animate-fade-up"
+      style2={{ animationFillMode: "forwards" }}
+    >
       <div>
-        <h1 className="font-display text-2xl font-bold text-gray-900 tracking-tight">{title}</h1>
-        {subtitle && <p className="text-sm text-gray-400 mt-0.5">{subtitle}</p>}
+        <h1 className="page-header-title">{title}</h1>
+        {subtitle && <p className="page-header-sub">{subtitle}</p>}
       </div>
-      {actions && <div className="flex items-center gap-2.5 mt-1">{actions}</div>}
+      {actions && (
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
+          {actions}
+        </div>
+      )}
     </div>
   );
 }
 
 // ── Spinner ────────────────────────────────────────────────────
 export function Spinner({ size = "md" }) {
-  const s = size === "sm" ? "h-4 w-4" : size === "lg" ? "h-10 w-10" : "h-6 w-6";
+  const px = size === "sm" ? 16 : size === "lg" ? 40 : 24;
   return (
-    <svg className={`${s} animate-spin text-brand-500`} fill="none" viewBox="0 0 24 24">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    <svg width={px} height={px} viewBox="0 0 24 24" fill="none" className="animate-spin" style={{ color: "#00B5AD" }}>
+      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" opacity="0.2" />
+      <path fill="currentColor" opacity="0.8" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
     </svg>
   );
 }
 
 export function PageLoader() {
   return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="text-center">
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "55vh" }}>
+      <div style={{ textAlign: "center" }}>
         <Spinner size="lg" />
-        <p className="text-gray-400 text-sm mt-3">Loading...</p>
+        <p style={{ color: "#94a3b8", fontSize: 13, marginTop: 12 }}>Loading...</p>
       </div>
     </div>
   );
@@ -72,12 +90,18 @@ export function PageLoader() {
 // ── Empty State ────────────────────────────────────────────────
 export function EmptyState({ icon, title, subtitle, action }) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-300 text-3xl mb-4">
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "60px 20px", textAlign: "center" }}>
+      <div style={{
+        width: 64, height: 64, borderRadius: 20,
+        background: "linear-gradient(135deg, #f1f5f9, #e2e8f0)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: 28, marginBottom: 16,
+        boxShadow: "inset 0 2px 4px rgba(0,0,0,0.06)",
+      }}>
         {icon || "📦"}
       </div>
-      <p className="text-gray-600 font-medium text-sm mb-1">{title || "Nothing here yet"}</p>
-      {subtitle && <p className="text-gray-400 text-xs mb-4 max-w-xs">{subtitle}</p>}
+      <p style={{ color: "#374151", fontWeight: 600, fontSize: 14, marginBottom: 6 }}>{title || "Nothing here yet"}</p>
+      {subtitle && <p style={{ color: "#9ca3af", fontSize: 12.5, marginBottom: 16, maxWidth: 280 }}>{subtitle}</p>}
       {action}
     </div>
   );
@@ -86,20 +110,65 @@ export function EmptyState({ icon, title, subtitle, action }) {
 // ── Modal ──────────────────────────────────────────────────────
 export function Modal({ open, onClose, title, children, size = "md" }) {
   if (!open) return null;
-  const widths = { sm: "max-w-sm", md: "max-w-lg", lg: "max-w-2xl", xl: "max-w-4xl" };
+  const maxWidths = { sm: 420, md: 560, lg: 720, xl: 960 };
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className={`relative bg-white rounded-2xl shadow-2xl w-full ${widths[size]} max-h-[90vh] overflow-y-auto animate-dropdown`}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="font-display font-bold text-gray-900">{title}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 50,
+      display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
+    }}>
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        style={{
+          position: "absolute", inset: 0,
+          background: "rgba(10,37,64,0.45)",
+          backdropFilter: "blur(6px)",
+        }}
+      />
+      {/* Panel */}
+      <div
+        className="animate-fade-up"
+        style={{
+          position: "relative",
+          background: "#fff",
+          borderRadius: 20,
+          width: "100%",
+          maxWidth: maxWidths[size],
+          maxHeight: "90vh",
+          overflowY: "auto",
+          boxShadow: "0 24px 60px rgba(0,0,0,0.18)",
+          animationFillMode: "forwards",
+          border: "1px solid rgba(0,0,0,0.08)",
+        }}
+      >
+        {/* Header */}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "18px 24px",
+          borderBottom: "1px solid #f1f5f9",
+          background: "linear-gradient(180deg, #fafcff 0%, #fff 100%)",
+          borderRadius: "20px 20px 0 0",
+        }}>
+          <h2 style={{ fontFamily: "'Outfit', sans-serif", fontSize: 17, fontWeight: 700, color: "#0f172a" }}>
+            {title}
+          </h2>
+          <button
+            onClick={onClose}
+            style={{
+              width: 30, height: 30, borderRadius: 8,
+              border: "1.5px solid #e5e7eb",
+              background: "#f9fafb",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", color: "#6b7280",
+              transition: "all 0.15s",
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           </button>
         </div>
-        <div className="px-6 py-5">{children}</div>
+        <div style={{ padding: "22px 24px" }}>{children}</div>
       </div>
     </div>
   );
@@ -108,15 +177,17 @@ export function Modal({ open, onClose, title, children, size = "md" }) {
 // ── Search Input ───────────────────────────────────────────────
 export function SearchInput({ value, onChange, placeholder = "Search..." }) {
   return (
-    <div className="relative">
-      <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <div style={{ position: "relative" }}>
+      <svg style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }}
+        width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
       </svg>
       <input
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        className="input-base pl-9 w-64"
+        className="input-base"
+        style={{ paddingLeft: 34, width: 260 }}
       />
     </div>
   );
@@ -125,13 +196,18 @@ export function SearchInput({ value, onChange, placeholder = "Search..." }) {
 // ── Alert Banner ───────────────────────────────────────────────
 export function AlertBanner({ type = "warning", message }) {
   const styles = {
-    warning: "bg-amber-50 border-amber-200 text-amber-800",
-    error:   "bg-red-50 border-red-200 text-red-700",
-    info:    "bg-blue-50 border-blue-200 text-blue-700",
+    warning: { bg: "#fffbeb", border: "#fcd34d", color: "#92400e" },
+    error:   { bg: "#fff5f5", border: "#fca5a5", color: "#991b1b" },
+    info:    { bg: "#eff6ff", border: "#93c5fd", color: "#1e40af" },
   };
+  const s = styles[type];
   return (
-    <div className={`rounded-lg border px-4 py-3 text-sm flex items-center gap-2 ${styles[type]}`}>
-      <span>⚠️</span> {message}
+    <div style={{
+      background: s.bg, border: `1px solid ${s.border}`, color: s.color,
+      borderRadius: 12, padding: "12px 16px",
+      fontSize: 13, display: "flex", alignItems: "center", gap: 8,
+    }}>
+      ⚠️ {message}
     </div>
   );
 }
@@ -140,12 +216,31 @@ export function AlertBanner({ type = "warning", message }) {
 export function ConfirmDialog({ open, onClose, onConfirm, title, message, confirmLabel = "Confirm", danger = false }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 animate-dropdown">
-        <h3 className="font-display font-bold text-gray-900 mb-2">{title}</h3>
-        <p className="text-sm text-gray-500 mb-6">{message}</p>
-        <div className="flex gap-2 justify-end">
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 50,
+      display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
+    }}>
+      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(10,37,64,0.45)", backdropFilter: "blur(6px)" }} />
+      <div className="animate-fade-up" style={{
+        position: "relative", background: "#fff", borderRadius: 20,
+        width: "100%", maxWidth: 400, padding: 28,
+        boxShadow: "0 24px 60px rgba(0,0,0,0.18)",
+        animationFillMode: "forwards",
+        border: "1px solid rgba(0,0,0,0.08)",
+      }}>
+        <div style={{
+          width: 48, height: 48, borderRadius: 14,
+          background: danger ? "#fee2e2" : "#dbeafe",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 22, marginBottom: 16,
+        }}>
+          {danger ? "🗑️" : "❓"}
+        </div>
+        <h3 style={{ fontFamily: "'Outfit', sans-serif", fontSize: 17, fontWeight: 700, color: "#0f172a", marginBottom: 8 }}>
+          {title}
+        </h3>
+        <p style={{ fontSize: 13.5, color: "#64748b", marginBottom: 24, lineHeight: 1.6 }}>{message}</p>
+        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
           <button onClick={onClose} className="btn-secondary">Cancel</button>
           <button onClick={onConfirm} className={danger ? "btn-danger" : "btn-primary"}>{confirmLabel}</button>
         </div>

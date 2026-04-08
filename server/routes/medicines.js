@@ -16,14 +16,13 @@ router.use(protect);
 
 router.get("/stats/summary", getDashboardStats);
 
-router.route("/")
-  .get(getMedicines)
-  .post(addMedicine);
+router.route("/").get(getMedicines).post(addMedicine);
 
-router.route("/:id")
+router
+  .route("/:id")
   .get(getMedicine)
   .put(updateMedicine)
-  .delete(authorize("admin"), deleteMedicine);
+  .delete(deleteMedicine);
 
 router.patch("/:id/stock", updateStock);
 

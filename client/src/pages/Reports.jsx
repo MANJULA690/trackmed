@@ -390,9 +390,9 @@ function TransactionReport() {
             <option value="returned">Returned</option>
           </select>
         </div>
-        <button onClick={() => { setTriggered(t => !t); }} className="btn-primary">
+        {/* <button onClick={() => { setTriggered(t => !t); }} className="btn-primary">
           Generate Report
-        </button>
+        </button> */}
       </div>
 
       {/* Summary badges */}

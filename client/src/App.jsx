@@ -10,8 +10,6 @@ import Inventory   from "./pages/Inventory";
 import Alerts      from "./pages/Alerts";
 import Predictions from "./pages/Predictions";
 import Reports     from "./pages/Reports";
-import Staff       from "./pages/Staff";
-import Settings    from "./pages/Settings";
 
 export default function App() {
   return (
@@ -22,39 +20,24 @@ export default function App() {
           toastOptions={{
             duration: 3500,
             style: {
-              fontFamily: "'DM Sans', sans-serif",
+              fontFamily: "\'Plus Jakarta Sans\', sans-serif",
               fontSize: "13px",
-              borderRadius: "10px",
+              borderRadius: "12px",
               border: "1px solid #e5e7eb",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+              boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
             },
             success: { iconTheme: { primary: "#00B5AD", secondary: "#fff" } },
           }}
         />
-
         <Routes>
-          {/* Public */}
           <Route path="/login" element={<Login />} />
-
-          {/* Protected — wrapped in Layout */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index            element={<Dashboard />} />
-            <Route path="inventory" element={<Inventory />} />
-            <Route path="alerts"    element={<Alerts />} />
+          <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+            <Route index              element={<Dashboard />} />
+            <Route path="inventory"   element={<Inventory />} />
+            <Route path="alerts"      element={<Alerts />} />
             <Route path="predictions" element={<Predictions />} />
-            <Route path="reports"   element={<Reports />} />
-            <Route path="staff"     element={<Staff />} />
-            <Route path="settings"  element={<Settings />} />
+            <Route path="reports"     element={<Reports />} />
           </Route>
-
-          {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

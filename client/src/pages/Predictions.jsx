@@ -69,7 +69,6 @@ export default function Predictions() {
     <div>
       <PageHeader
         title="Demand Predictions"
-        subtitle="ML-powered forecast based on last 90 days of usage"
       />
 
       {/* Summary pills */}
@@ -86,13 +85,6 @@ export default function Predictions() {
           <div>
             <p className="text-lg font-display font-bold text-gray-900">{needsRestock}</p>
             <p className="text-xs text-gray-400">Need restocking</p>
-          </div>
-        </div>
-        <div className="card px-4 py-3 flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-500 flex items-center justify-center text-sm">🤖</div>
-          <div>
-            <p className="text-lg font-display font-bold text-gray-900">WMA + LR</p>
-            <p className="text-xs text-gray-400">Prediction model</p>
           </div>
         </div>
       </div>
@@ -179,17 +171,6 @@ export default function Predictions() {
                 </tbody>
               </table>
             </div>
-          </div>
-
-          {/* Model info card */}
-          <div className="card p-5 mt-4 bg-gradient-to-r from-brand-50 to-blue-50 border-brand-100">
-            <h4 className="font-display font-bold text-gray-800 text-sm mb-2">About the Prediction Model</h4>
-            <p className="text-xs text-gray-600 leading-relaxed">
-              TrackMed uses a <strong>Weighted Moving Average (WMA)</strong> blended with <strong>Linear Regression</strong>
-              to forecast demand. The model analyzes the last 90 days of stock transactions (issued quantities) per medicine.
-              Recent data is weighted more heavily (60% WMA + 40% regression trend). Confidence is calculated using the
-              coefficient of variation — high confidence means consistent usage patterns.
-            </p>
           </div>
         </>
       )}
