@@ -201,7 +201,7 @@ export default function Login() {
               </button>
             </form>
 
-            {/* Demo creds */}
+            {/* Demo creds
             <div style={{
               marginTop: 22, padding: "14px 16px",
               background: "rgba(255,255,255,0.04)",
@@ -231,7 +231,7 @@ export default function Login() {
                   <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "'JetBrains Mono',monospace" }}>{c.email}</span>
                 </button>
               ))}
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

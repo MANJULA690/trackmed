@@ -124,7 +124,8 @@ const predictDemand = (transactions, medicineName = "") => {
 
   // Confidence based on data consistency
   const avg = last30.reduce((a, b) => a + b, 0) / last30.length;
-  const variance = last30.reduce((acc, v) => acc + Math.pow(v - avg, 2), 0) / last30.length;
+  const variance =
+    last30.reduce((acc, v) => acc + Math.pow(v - avg, 2), 0) / last30.length;
   const cv = avg > 0 ? Math.sqrt(variance) / avg : 1;
 
   let confidence = "high";
@@ -178,8 +179,9 @@ const predictAllMedicines = async (limit = 10) => {
         medicineName: med.name,
         currentStock: med.quantity,
         lowStockThreshold: med.lowStockThreshold,
-        predictedNext30Days: prediction.predictedNext30Days,
+        // predictedNext30Days: prediction.predictedNext30Days,
         averageDailyUsage: prediction.averageDailyUsage,
+        predicted: prediction.averageDailyUsage * 30,
         trend: prediction.trend,
         confidence: prediction.confidence,
         // Will stock run out before next 30 days?
@@ -189,7 +191,7 @@ const predictAllMedicines = async (limit = 10) => {
             : null,
         needsRestock: med.quantity < prediction.predictedNext30Days,
       };
-    })
+    }),
   );
 
   // Sort by predicted demand descending

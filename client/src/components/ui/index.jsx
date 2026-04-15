@@ -1,3 +1,5 @@
+import { createPortal } from "react-dom";
+
 // ── Stat Card ──────────────────────────────────────────────────
 export function StatCard({ label, value, icon, trend, trendUp, color = "teal", delay = "", sublabel }) {
   const configs = {
@@ -110,71 +112,26 @@ export function EmptyState({ icon, title, subtitle, action }) {
 // ── Modal ──────────────────────────────────────────────────────
 export function Modal({ open, onClose, title, children, size = "md" }) {
   if (!open) return null;
-  const maxWidths = { sm: 420, md: 560, lg: 720, xl: 960 };
-  return (
-    <div style={{
-      position: "fixed", inset: 0, zIndex: 50,
-      display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
-    }}>
-      {/* Backdrop */}
-      <div
-        onClick={onClose}
-        style={{
-          position: "absolute", inset: 0,
-          background: "rgba(10,37,64,0.45)",
-          backdropFilter: "blur(6px)",
-        }}
-      />
-      {/* Panel */}
-      <div
-        className="animate-fade-up"
-        style={{
-          position: "relative",
-          background: "#fff",
-          borderRadius: 20,
-          width: "100%",
-          maxWidth: maxWidths[size],
-          maxHeight: "90vh",
-          overflowY: "auto",
-          boxShadow: "0 24px 60px rgba(0,0,0,0.18)",
-          animationFillMode: "forwards",
-          border: "1px solid rgba(0,0,0,0.08)",
-        }}
-      >
-        {/* Header */}
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "18px 24px",
-          borderBottom: "1px solid #f1f5f9",
-          background: "linear-gradient(180deg, #fafcff 0%, #fff 100%)",
-          borderRadius: "20px 20px 0 0",
-        }}>
-          <h2 style={{ fontFamily: "'Outfit', sans-serif", fontSize: 17, fontWeight: 700, color: "#0f172a" }}>
-            {title}
-          </h2>
-          <button
-            onClick={onClose}
-            style={{
-              width: 30, height: 30, borderRadius: 8,
-              border: "1.5px solid #e5e7eb",
-              background: "#f9fafb",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", color: "#6b7280",
-              transition: "all 0.15s",
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
+  const maxW = { sm: 420, md: 560, lg: 720, xl: 960 }[size] || 560;
+  const h    = Math.min(window.innerHeight * 0.9, 680);
+  return createPortal(
+    <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} />
+      <div style={{ position: "relative", background: "#fff", borderRadius: 20, width: "100%", maxWidth: maxW, height: h, display: "flex", flexDirection: "column", boxShadow: "0 24px 64px rgba(0,0,0,0.22)", overflow: "hidden" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 22px", borderBottom: "1px solid #f1f5f9", flexShrink: 0, background: "#fff" }}>
+          <div style={{ fontFamily: "'Outfit',sans-serif", fontSize: 16, fontWeight: 800, color: "#0f172a" }}>{title}</div>
+          <button onClick={onClose} style={{ border: "none", background: "#f1f5f9", color: "#64748b", padding: 6, borderRadius: 8, cursor: "pointer", display: "flex", alignItems: "center" }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
-        <div style={{ padding: "22px 24px" }}>{children}</div>
+        <div style={{ flex: 1, overflowY: "auto", padding: "20px 22px", minHeight: 0 }}>{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
-// ── Search Input ───────────────────────────────────────────────
+
 export function SearchInput({ value, onChange, placeholder = "Search..." }) {
   return (
     <div style={{ position: "relative" }}>
@@ -215,36 +172,18 @@ export function AlertBanner({ type = "warning", message }) {
 // ── Confirm Dialog ─────────────────────────────────────────────
 export function ConfirmDialog({ open, onClose, onConfirm, title, message, confirmLabel = "Confirm", danger = false }) {
   if (!open) return null;
-  return (
-    <div style={{
-      position: "fixed", inset: 0, zIndex: 50,
-      display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
-    }}>
-      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(10,37,64,0.45)", backdropFilter: "blur(6px)" }} />
-      <div className="animate-fade-up" style={{
-        position: "relative", background: "#fff", borderRadius: 20,
-        width: "100%", maxWidth: 400, padding: 28,
-        boxShadow: "0 24px 60px rgba(0,0,0,0.18)",
-        animationFillMode: "forwards",
-        border: "1px solid rgba(0,0,0,0.08)",
-      }}>
-        <div style={{
-          width: 48, height: 48, borderRadius: 14,
-          background: danger ? "#fee2e2" : "#dbeafe",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 22, marginBottom: 16,
-        }}>
-          {danger ? "🗑️" : "❓"}
-        </div>
-        <h3 style={{ fontFamily: "'Outfit', sans-serif", fontSize: 17, fontWeight: 700, color: "#0f172a", marginBottom: 8 }}>
-          {title}
-        </h3>
+  return createPortal(
+    <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} />
+      <div style={{ position: "relative", background: "#fff", borderRadius: 20, width: "100%", maxWidth: 420, padding: "24px", boxShadow: "0 24px 64px rgba(0,0,0,0.22)" }}>
+        <div style={{ fontFamily: "'Outfit',sans-serif", fontSize: 17, fontWeight: 800, color: "#0f172a", marginBottom: 8 }}>{title}</div>
         <p style={{ fontSize: 13.5, color: "#64748b", marginBottom: 24, lineHeight: 1.6 }}>{message}</p>
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
           <button onClick={onClose} className="btn-secondary">Cancel</button>
           <button onClick={onConfirm} className={danger ? "btn-danger" : "btn-primary"}>{confirmLabel}</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

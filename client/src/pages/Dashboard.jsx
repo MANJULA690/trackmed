@@ -81,7 +81,7 @@ export default function Dashboard() {
   };
 
   const greet = () => { const h = new Date().getHours(); return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening"; };
-  const ICONS = { low_stock:"📦", out_of_stock:"🚫", expiry_warning:"⏳", expiry_critical:"🔴", expired:"💀" };
+  const ICONS = { low_stock:"📦", out_of_stock:"🚫", expiry_warning:"⏳", expiry_critical:"🔴", expired:"❌" };
 
   return (
     <div>

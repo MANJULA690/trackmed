@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useOutletContext } from "react-router-dom";
 import { medicineAPI } from "../api/services";
 import { PageHeader, SearchInput, EmptyState, PageLoader, ConfirmDialog } from "../components/ui";
@@ -13,28 +14,83 @@ const EMPTY_FORM = {
   supplier: { name: "", contact: "" }, storageConditions: "", prescriptionRequired: false, notes: "",
 };
 
-/* ── Full-height modal ───────────────────────────────────────── */
-function Modal({ open, onClose, title, children, maxW = 640 }) {
+/* ── Modal — rendered via Portal so it never scrolls with the page ── */
+function Modal({ open, onClose, title, children, footer, maxW = 640 }) {
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [open]);
+
   if (!open) return null;
-  return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-      <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)" }} onClick={onClose} />
-      <div style={{ position: "relative", background: "#fff", borderRadius: 20, width: "100%", maxWidth: maxW, maxHeight: "90vh", boxShadow: "0 24px 64px rgba(0,0,0,0.18)", display: "flex", flexDirection: "column", animation: "scaleIn 0.2s cubic-bezier(.22,1,.36,1) both" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 22px", borderBottom: "1px solid #f1f5f9", flexShrink: 0 }}>
-          <div style={{ fontFamily: "'Outfit',sans-serif", fontSize: 16, fontWeight: 800, color: "#0f172a" }}>{title}</div>
-          <button onClick={onClose} style={{ border: "none", background: "#f8fafc", color: "#64748b", padding: "6px", borderRadius: 8, cursor: "pointer", display: "flex", alignItems: "center" }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+
+  const PANEL_H = Math.min(window.innerHeight * 0.9, 680);
+
+  const modal = (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 9999,
+      display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
+    }}>
+      {/* Backdrop */}
+      <div onClick={onClose} style={{
+        position: "absolute", inset: 0,
+        background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)",
+      }} />
+
+      {/* Panel */}
+      <div style={{
+        position: "relative",
+        width: "100%", maxWidth: maxW,
+        height: PANEL_H,
+        display: "flex", flexDirection: "column",
+        background: "#fff", borderRadius: 20,
+        boxShadow: "0 24px 64px rgba(0,0,0,0.22)",
+        overflow: "hidden",
+        animation: "scaleIn 0.2s cubic-bezier(.22,1,.36,1) both",
+      }}>
+        {/* Sticky header */}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "16px 22px", borderBottom: "1px solid #f1f5f9",
+          flexShrink: 0, background: "#fff",
+        }}>
+          <div style={{ fontFamily: "'Outfit',sans-serif", fontSize: 16, fontWeight: 800, color: "#0f172a" }}>
+            {title}
+          </div>
+          <button onClick={onClose} style={{
+            border: "none", background: "#f1f5f9", color: "#64748b",
+            padding: 6, borderRadius: 8, cursor: "pointer",
+            display: "flex", alignItems: "center",
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
           </button>
         </div>
-        <div style={{ overflowY: "auto", flex: 1, padding: "20px 22px" }}>{children}</div>
+
+        {/* Scrollable body */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "20px 22px", minHeight: 0 }}>
+          {children}
+        </div>
+
+        {/* Sticky footer */}
+        {footer && (
+          <div style={{
+            flexShrink: 0, background: "#fff",
+            borderTop: "1px solid #f1f5f9",
+            padding: "14px 22px",
+          }}>
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   );
+
+  // Mount directly on document.body — completely outside the page scroll tree
+  return createPortal(modal, document.body);
 }
+
 
 /* ── Medicine name search autocomplete ───────────────────────── */
 function MedicineSearch({ value, onChange, onSelect }) {
@@ -318,8 +374,16 @@ export default function Inventory() {
       </div>
 
       {/* Add/Edit Modal */}
-      <Modal open={addOpen || !!editMed} onClose={() => { setAddOpen(false); setEditMed(null); }} title={editMed ? "Edit Medicine" : "Add New Medicine"}>
-        <form onSubmit={editMed ? handleEdit : handleAdd} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Modal open={addOpen || !!editMed} onClose={() => { setAddOpen(false); setEditMed(null); }} title={editMed ? "Edit Medicine" : "Add New Medicine"}
+        footer={
+          <div style={{ display: "flex", gap: 10 }}>
+            <button type="button" onClick={() => { setAddOpen(false); setEditMed(null); }} className="btn-secondary" style={{ flex: 1 }}>Cancel</button>
+            <button type="submit" form="medicine-form" disabled={submitting} className="btn-primary" style={{ flex: 1 }}>
+              {submitting ? "Saving..." : editMed ? "Save Changes" : "Add Medicine"}
+            </button>
+          </div>
+        }>
+        <form id="medicine-form" onSubmit={editMed ? handleEdit : handleAdd} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {sectionTitle("Medicine Identity")}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div style={{ gridColumn: "span 2" }}>
@@ -350,18 +414,18 @@ export default function Inventory() {
           <div><label style={L}>Pack size</label><input value={form.packSizeLabel} onChange={e => F("packSizeLabel", e.target.value)} className="input-base" placeholder="e.g. Strip of 10 tablets" /></div>
           <div><label style={L}>Notes / Storage</label><textarea rows={2} value={form.notes} onChange={e => F("notes", e.target.value)} className="input-base" style={{ resize: "none" }} placeholder="e.g. Store below 25°C..." /></div>
 
-          <div style={{ display: "flex", gap: 10, paddingTop: 4, borderTop: "1px solid #f1f5f9", position: "sticky", bottom: 0, background: "#fff", paddingBottom: 2 }}>
-            <button type="button" onClick={() => { setAddOpen(false); setEditMed(null); }} className="btn-secondary" style={{ flex: 1 }}>Cancel</button>
-            <button type="submit" disabled={submitting} className="btn-primary" style={{ flex: 1 }}>
-              {submitting ? "Saving..." : editMed ? "Save Changes" : "Add Medicine"}
-            </button>
-          </div>
         </form>
       </Modal>
 
       {/* Stock update */}
-      <Modal open={!!stockMed} onClose={() => setStockMed(null)} title={`Update Stock — ${stockMed?.name}`} maxW={400}>
-        <form onSubmit={handleStock} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <Modal open={!!stockMed} onClose={() => setStockMed(null)} title={`Update Stock — ${stockMed?.name}`} maxW={400}
+        footer={
+          <div style={{ display: "flex", gap: 10 }}>
+            <button type="button" onClick={() => setStockMed(null)} className="btn-secondary" style={{ flex: 1 }}>Cancel</button>
+            <button type="submit" form="stock-form" disabled={submitting} className="btn-primary" style={{ flex: 1 }}>{submitting ? "Saving..." : "Update Stock"}</button>
+          </div>
+        }>
+        <form id="stock-form" onSubmit={handleStock} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ display: "flex", justifyContent: "space-between", padding: "12px 16px", background: "linear-gradient(135deg,#e0f7f6,#f0fffe)", borderRadius: 12, border: "1px solid #b2f0ee" }}>
             <span style={{ fontSize: 13, color: "#00857f", fontWeight: 600 }}>Current stock</span>
             <span style={{ fontFamily: "'Outfit',sans-serif", fontSize: 18, fontWeight: 800, color: "#00857f" }}>{stockMed?.quantity} <span style={{ fontSize: 12, fontWeight: 400 }}>{stockMed?.unit}</span></span>
@@ -376,10 +440,6 @@ export default function Inventory() {
           </div>
           <div><label style={L}>Reason (optional)</label>
             <input type="text" value={stockForm.reason} onChange={e => setStockForm({ ...stockForm, reason: e.target.value })} className="input-base" placeholder="e.g. Patient dispensing..." />
-          </div>
-          <div style={{ display: "flex", gap: 10 }}>
-            <button type="button" onClick={() => setStockMed(null)} className="btn-secondary" style={{ flex: 1 }}>Cancel</button>
-            <button type="submit" disabled={submitting} className="btn-primary" style={{ flex: 1 }}>{submitting ? "Saving..." : "Update Stock"}</button>
           </div>
         </form>
       </Modal>

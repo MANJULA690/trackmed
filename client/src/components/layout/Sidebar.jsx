@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { useState, useRef, useEffect } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -61,8 +62,8 @@ function SettingsModal({ open, onClose, user }) {
   const roleColor = user?.role === "admin" ? "#7c3aed" : user?.role === "pharmacist" ? "#00857f" : "#6b7280";
   const roleBg    = user?.role === "admin" ? "#f3e8ff" : user?.role === "pharmacist" ? "#ccfbf1" : "#f3f4f6";
 
-  return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+  return createPortal(
+    <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
       <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose} />
       <div style={{
         position: "relative", background: "#fff", borderRadius: 20,
@@ -152,7 +153,7 @@ function SettingsModal({ open, onClose, user }) {
         </div>
       </div>
     </div>
-  );
+  , document.body);
 }
 
 /* ── Sidebar ─────────────────────────────────────────────────── */

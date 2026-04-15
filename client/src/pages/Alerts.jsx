@@ -9,15 +9,15 @@ const SEV = {
   critical: { dot: "#ef4444", leftBar: "#ef4444", bg: "#fff5f5", border: "#fecaca" },
   warning:  { dot: "#f59e0b", leftBar: "#f59e0b", bg: "#fffbeb", border: "#fde68a" },
 };
-const ICONS = { low_stock:"📦", out_of_stock:"🚫", expiry_warning:"⏳", expiry_critical:"🔴", expired:"💀" };
+const ICONS = { low_stock:"📦", out_of_stock:"🚫", expiry_warning:"⏳", expiry_critical:"🔴", expired:"❌" };
 
 // Maps filter button → alertType values
-const TYPE_FILTER_MAP = {
-  all:      null,
-  critical: ["expiry_critical", "out_of_stock", "expired"],
-  warning:  ["expiry_warning", "low_stock"],
-  resolved: null,
-};
+// const TYPE_FILTER_MAP = {
+//   all:      null,
+//   critical: ["expiry_critical", "out_of_stock", "expired"],
+//   warning:  ["expiry_warning", "low_stock"],
+//   resolved: null,
+// };
 
 export default function Alerts() {
   const { refetchAlerts } = useOutletContext() || {};
@@ -63,11 +63,11 @@ export default function Alerts() {
   const handleRead    = async (id) => { await alertAPI.markRead(id); fetchAlerts(); refetchAlerts?.(); };
   const handleResolve = async (id) => { await alertAPI.resolve(id); toast.success("Alert resolved ✓"); fetchAlerts(); refetchAlerts?.(); };
   const handleMarkAll = async ()   => { await alertAPI.markAllRead(); toast.success("All marked as read"); fetchAlerts(); refetchAlerts?.(); };
-  const handleScan    = async ()   => {
-    const tid = toast.loading("Scanning inventory...");
-    try { await alertAPI.triggerScan(); toast.dismiss(tid); toast.success("Scan complete — alerts updated!"); fetchAlerts(); refetchAlerts?.(); }
-    catch { toast.dismiss(tid); toast.error("Scan failed"); }
-  };
+  // const handleScan    = async ()   => {
+  //   const tid = toast.loading("Scanning inventory...");
+  //   try { await alertAPI.triggerScan(); toast.dismiss(tid); toast.success("Scan complete — alerts updated!"); fetchAlerts(); refetchAlerts?.(); }
+  //   catch { toast.dismiss(tid); toast.error("Scan failed"); }
+  // };
 
   const FILTER_BTNS = [
     { key: "all",      label: "All" },
@@ -84,10 +84,10 @@ export default function Alerts() {
         actions={
           <>
             <button onClick={handleMarkAll} className="btn-secondary" style={{ fontSize: 12 }}>Mark all read</button>
-            <button onClick={handleScan} className="btn-primary" style={{ fontSize: 12 }}>
+            {/* <button onClick={handleScan} className="btn-primary" style={{ fontSize: 12 }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
               Run scan
-            </button>
+            </button> */}
           </>
         }
       />
