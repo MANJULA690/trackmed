@@ -1,238 +1,272 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { authAPI } from "../api/services";
 import toast from "react-hot-toast";
 
 export default function Login() {
-  const [form, setForm]       = useState({ email: "", password: "" });
+  const [tab,     setTab]     = useState("login");   // "login" | "register"
   const [loading, setLoading] = useState(false);
+
+  /* Login form */
+  const [loginForm, setLoginForm] = useState({ email: "", password: "" });
+
+  /* Register form */
+  const [regForm, setRegForm] = useState({
+    name: "", email: "", password: "", confirmPassword: "",
+    role: "pharmacist", department: "Pharmacy",
+  });
+
   const { login } = useAuth();
   const navigate  = useNavigate();
 
-  const handleSubmit = async (e) => {
+  /* ── Login ───────────────────────────────────────────────── */
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await login(form.email, form.password);
+      await login(loginForm.email, loginForm.password);
       toast.success("Welcome back!");
       navigate("/");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Invalid credentials");
+      toast.error(err.response?.data?.message || "Invalid email or password.");
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div style={{
-      minHeight: "100vh", display: "flex",
-      background: "linear-gradient(135deg, #061628 0%, #0d2d4e 50%, #091e36 100%)",
-      position: "relative", overflow: "hidden",
-    }}>
-      {/* Decorative blobs */}
-      <div style={{
-        position: "absolute", top: -120, left: -120, width: 500, height: 500,
-        borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(0,181,173,0.12) 0%, transparent 70%)",
-        pointerEvents: "none",
-      }} />
-      <div style={{
-        position: "absolute", bottom: -80, right: -80, width: 400, height: 400,
-        borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 70%)",
-        pointerEvents: "none",
-      }} />
+  /* ── Register ────────────────────────────────────────────── */
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    if (regForm.password !== regForm.confirmPassword) {
+      toast.error("Passwords do not match.");
+      return;
+    }
+    if (regForm.password.length < 6) {
+      toast.error("Password must be at least 6 characters.");
+      return;
+    }
+    setLoading(true);
+    try {
+      await authAPI.register({
+        name:       regForm.name,
+        email:      regForm.email,
+        password:   regForm.password,
+        role:       regForm.role,
+        department: regForm.department,
+      });
+      toast.success("Account created! Please sign in.");
+      setTab("login");
+      setLoginForm({ email: regForm.email, password: "" });
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Registration failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      {/* Left panel — branding */}
-      <div style={{
-        width: 480, flexShrink: 0,
-        padding: "48px 52px",
-        display: "flex", flexDirection: "column", justifyContent: "space-between",
-        borderRight: "1px solid rgba(255,255,255,0.06)",
-      }} className="hidden lg:flex">
+  /* ── Shared input style ──────────────────────────────────── */
+  const inputStyle = {
+    width: "100%", padding: "10px 14px",
+    background: "rgba(255,255,255,0.07)",
+    border: "1px solid rgba(255,255,255,0.12)",
+    borderRadius: 10, color: "#fff", fontSize: 13,
+    outline: "none", fontFamily: "'Plus Jakarta Sans', sans-serif",
+    transition: "border 0.15s",
+  };
+  const labelStyle = { display: "block", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.6)", marginBottom: 6 };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#0A2540", display: "flex" }}>
+
+      {/* ── Left branding panel ─────────────────────────────── */}
+      <div style={{ width: 420, borderRight: "1px solid rgba(255,255,255,0.08)", padding: "40px 36px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}
+        className="hidden lg:flex">
         {/* Logo */}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{
-            width: 42, height: 42, borderRadius: 12,
-            background: "linear-gradient(135deg, #00C5BC, #007f7b)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 4px 20px rgba(0,181,173,0.4)",
-          }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2">
+          <div style={{ width: 38, height: 38, borderRadius: 10, background: "linear-gradient(135deg,#00C5BC,#007f7b)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 14px rgba(0,181,173,0.4)" }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2">
               <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-              <path d="M2 17l10 5 10-5"/>
-              <path d="M2 12l10 5 10-5"/>
+              <path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
             </svg>
           </div>
           <div>
-            <div style={{ fontFamily: "'Outfit',sans-serif", fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-0.3px" }}>
+            <div style={{ fontFamily: "'Outfit',sans-serif", fontSize: 20, fontWeight: 800, color: "#fff" }}>
               Track<span style={{ color: "#4dd4cf" }}>Med</span>
             </div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em" }}>PHARMACY SYSTEM</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", letterSpacing: "0.08em" }}>PHARMACY SYSTEM</div>
           </div>
         </div>
 
-        {/* Headline */}
+        {/* Tagline */}
         <div>
-          <h2 style={{
-            fontFamily: "'Outfit',sans-serif", fontSize: 42, fontWeight: 800,
-            color: "#fff", lineHeight: 1.15, letterSpacing: "-1px", marginBottom: 20,
-          }}>
-            Smarter<br />
-            <span style={{ color: "#4dd4cf" }}>medicine</span><br />
-            management.
+          <h2 style={{ fontFamily: "'Outfit',sans-serif", fontSize: 34, fontWeight: 800, color: "#fff", lineHeight: 1.2, marginBottom: 16 }}>
+            Smart medicine<br />stock management
           </h2>
-          <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 14, lineHeight: 1.7, marginBottom: 36 }}>
-            Track inventory, predict demand, and get automatic alerts — all in one platform built for hospital pharmacies.
+          <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.5)", lineHeight: 1.7, marginBottom: 28 }}>
+            Track inventory, predict demand, and get automatic alerts for expiring medicines and low stock.
           </p>
-
-          {/* Feature list */}
           {/* {[
-            { icon: "🔔", text: "Auto-alerts for low stock & expiry" },
-            { icon: "📊", text: "ML-powered 30-day demand prediction" },
-            { icon: "💊", text: "Manage 2,800+ medicines from Kaggle dataset" },
-            { icon: "🔒", text: "Role-based access for pharmacists & admins" },
-          ].map(f => (
-            <div key={f.text} style={{
-              display: "flex", alignItems: "center", gap: 12,
-              padding: "10px 0",
-              borderBottom: "1px solid rgba(255,255,255,0.05)",
-              color: "rgba(255,255,255,0.55)", fontSize: 13,
-            }}>
-              <span style={{ fontSize: 16, width: 24 }}>{f.icon}</span>
-              {f.text}
+            ["🔔", "Auto alerts for expiry & low stock"],
+            ["📊", "ML-powered demand prediction"],
+            ["🔍", "Search from 500+ Kaggle medicines"],
+            ["👥", "Role-based access control"],
+          ].map(([ic, txt]) => (
+            <div key={txt} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
+              <span style={{ fontSize: 16 }}>{ic}</span>{txt}
             </div>
           ))} */}
         </div>
 
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)" }}>
-          {/* TrackMed v1.0 · 6th Semester Project */}
-        </div>
+        <p style={{ fontSize: 11, color: "rgba(255,255,255,0.2)" }}>TrackMed v1.0 </p>
       </div>
 
-      {/* Right panel — form */}
-      <div style={{
-        flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 32,
-      }}>
-        <div style={{ width: "100%", maxWidth: 400 }} className="animate-fade-up" style2={{ animationFillMode: "forwards" }}>
+      {/* ── Right form panel ─────────────────────────────────── */}
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
+        <div style={{ width: "100%", maxWidth: 400 }}>
 
-          {/* Glass card */}
-          <div style={{
-            background: "rgba(255,255,255,0.05)",
-            backdropFilter: "blur(16px)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: 24,
-            padding: "36px 36px",
-            boxShadow: "0 24px 60px rgba(0,0,0,0.3)",
-          }}>
-            <div style={{ marginBottom: 28 }}>
-              <h1 style={{ fontFamily: "'Outfit',sans-serif", fontSize: 26, fontWeight: 800, color: "#fff", marginBottom: 6 }}>
-                Sign in
-              </h1>
-              <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 13.5 }}>
-                Enter your credentials to continue
-              </p>
-            </div>
-
-            <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: 16 }}>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.55)", marginBottom: 7, letterSpacing: "0.04em" }}>
-                  EMAIL ADDRESS
-                </label>
-                <input
-                  type="email" required
-                  value={form.email}
-                  onChange={e => setForm({ ...form, email: e.target.value })}
-                  placeholder="admin@trackmed.com"
-                  style={{
-                    width: "100%", padding: "11px 14px",
-                    background: "rgba(255,255,255,0.07)",
-                    border: "1.5px solid rgba(255,255,255,0.12)",
-                    borderRadius: 12, color: "#fff", fontSize: 14,
-                    outline: "none", transition: "all 0.15s",
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  }}
-                  onFocus={e => { e.target.style.borderColor = "#00B5AD"; e.target.style.background = "rgba(0,181,173,0.08)"; }}
-                  onBlur={e => { e.target.style.borderColor = "rgba(255,255,255,0.12)"; e.target.style.background = "rgba(255,255,255,0.07)"; }}
-                />
-              </div>
-
-              <div style={{ marginBottom: 24 }}>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.55)", marginBottom: 7, letterSpacing: "0.04em" }}>
-                  PASSWORD
-                </label>
-                <input
-                  type="password" required
-                  value={form.password}
-                  onChange={e => setForm({ ...form, password: e.target.value })}
-                  placeholder="••••••••"
-                  style={{
-                    width: "100%", padding: "11px 14px",
-                    background: "rgba(255,255,255,0.07)",
-                    border: "1.5px solid rgba(255,255,255,0.12)",
-                    borderRadius: 12, color: "#fff", fontSize: 14,
-                    outline: "none", transition: "all 0.15s",
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  }}
-                  onFocus={e => { e.target.style.borderColor = "#00B5AD"; e.target.style.background = "rgba(0,181,173,0.08)"; }}
-                  onBlur={e => { e.target.style.borderColor = "rgba(255,255,255,0.12)"; e.target.style.background = "rgba(255,255,255,0.07)"; }}
-                />
-              </div>
-
-              <button type="submit" disabled={loading} style={{
-                width: "100%", padding: "13px",
-                background: loading ? "#005f5c" : "linear-gradient(135deg, #00C5BC, #009990)",
-                color: "#fff", border: "none", borderRadius: 12,
-                fontFamily: "'Outfit',sans-serif", fontSize: 15, fontWeight: 700,
-                cursor: loading ? "not-allowed" : "pointer",
-                transition: "all 0.2s",
-                boxShadow: "0 4px 16px rgba(0,181,173,0.35)",
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+          {/* Tab switcher */}
+          <div style={{ display: "flex", background: "rgba(255,255,255,0.06)", borderRadius: 12, padding: 4, marginBottom: 28 }}>
+            {["login", "register"].map(t => (
+              <button key={t} onClick={() => setTab(t)} style={{
+                flex: 1, padding: "10px 0", borderRadius: 9, border: "none", cursor: "pointer",
+                fontSize: 13.5, fontWeight: 700, transition: "all 0.2s",
+                background: tab === t ? "#00B5AD" : "transparent",
+                color: tab === t ? "#fff" : "rgba(255,255,255,0.45)",
+                boxShadow: tab === t ? "0 2px 8px rgba(0,181,173,0.35)" : "none",
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                textTransform: "capitalize",
               }}>
-                {loading ? (
-                  <>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="animate-spin">
-                      <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="3" opacity="0.3"/>
-                      <path fill="white" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                    </svg>
-                    Signing in...
-                  </>
-                ) : "Sign in →"}
+                {t === "login" ? "Sign In" : "Register"}
               </button>
-            </form>
-
-            {/* Demo creds
-            <div style={{
-              marginTop: 22, padding: "14px 16px",
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 14,
-            }}>
-              <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", marginBottom: 10 }}>
-                DEMO CREDENTIALS
-              </p>
-              {[
-                { role: "Admin", email: "admin@trackmed.com", pw: "Admin@123" },
-                { role: "Pharmacist", email: "pharmacist@trackmed.com", pw: "Pharma@123" },
-              ].map(c => (
-                <button key={c.role} type="button"
-                  onClick={() => setForm({ email: c.email, password: c.pw })}
-                  style={{
-                    display: "flex", alignItems: "center", justifyContent: "space-between",
-                    width: "100%", padding: "8px 10px", borderRadius: 10,
-                    background: "transparent", border: "none", cursor: "pointer",
-                    marginBottom: 4, transition: "background 0.15s",
-                    color: "rgba(255,255,255,0.6)",
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
-                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                >
-                  <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.8)" }}>{c.role}</span>
-                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "'JetBrains Mono',monospace" }}>{c.email}</span>
-                </button>
-              ))}
-            </div> */}
+            ))}
           </div>
+
+          {/* ── LOGIN FORM ──────────────────────────────────── */}
+          {tab === "login" && (
+            <>
+              <div style={{ marginBottom: 24 }}>
+                <h1 style={{ fontFamily: "'Outfit',sans-serif", fontSize: 24, fontWeight: 800, color: "#fff", marginBottom: 4 }}>Welcome back</h1>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }}>Sign in to your TrackMed account</p>
+              </div>
+              <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                <div>
+                  <label style={labelStyle}>Email address</label>
+                  <input type="email" required value={loginForm.email}
+                    onChange={e => setLoginForm({ ...loginForm, email: e.target.value })}
+                    placeholder="admin@trackmed.com" style={inputStyle}
+                    onFocus={e => e.target.style.border = "1px solid #00B5AD"}
+                    onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.12)"} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Password</label>
+                  <input type="password" required value={loginForm.password}
+                    onChange={e => setLoginForm({ ...loginForm, password: e.target.value })}
+                    placeholder="••••••••" style={inputStyle}
+                    onFocus={e => e.target.style.border = "1px solid #00B5AD"}
+                    onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.12)"} />
+                </div>
+                <button type="submit" disabled={loading} style={{
+                  padding: "12px", background: "linear-gradient(135deg,#00C5BC,#00A09A)",
+                  color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700,
+                  cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1,
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  boxShadow: "0 4px 12px rgba(0,181,173,0.35)", transition: "all 0.15s",
+                }}>
+                  {loading ? "Signing in..." : "Sign in →"}
+                </button>
+              </form>
+              
+              <p style={{ marginTop: 16, textAlign: "center", fontSize: 12.5, color: "rgba(255,255,255,0.35)" }}>
+                Don't have an account?{" "}
+                <button onClick={() => setTab("register")} style={{ color: "#00B5AD", background: "none", border: "none", cursor: "pointer", fontWeight: 700, fontSize: 12.5 }}>
+                  Register here
+                </button>
+              </p>
+            </>
+          )}
+
+          {/* ── REGISTER FORM ───────────────────────────────── */}
+          {tab === "register" && (
+            <>
+              <div style={{ marginBottom: 24 }}>
+                <h1 style={{ fontFamily: "'Outfit',sans-serif", fontSize: 24, fontWeight: 800, color: "#fff", marginBottom: 4 }}>Create account</h1>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }}>Register to access TrackMed</p>
+              </div>
+              <form onSubmit={handleRegister} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <div>
+                  <label style={labelStyle}>Full name *</label>
+                  <input type="text" required value={regForm.name}
+                    onChange={e => setRegForm({ ...regForm, name: e.target.value })}
+                    placeholder="Dr. Arjun Patel" style={inputStyle}
+                    onFocus={e => e.target.style.border = "1px solid #00B5AD"}
+                    onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.12)"} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Email address *</label>
+                  <input type="email" required value={regForm.email}
+                    onChange={e => setRegForm({ ...regForm, email: e.target.value })}
+                    placeholder="arjun@hospital.com" style={inputStyle}
+                    onFocus={e => e.target.style.border = "1px solid #00B5AD"}
+                    onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.12)"} />
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <div>
+                    <label style={labelStyle}>Role</label>
+                    <select value={regForm.role} onChange={e => setRegForm({ ...regForm, role: e.target.value })}
+                      style={{ ...inputStyle, appearance: "none" }}>
+                      <option value="pharmacist">Pharmacist</option>
+                      <option value="staff">Staff</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Department</label>
+                    <input type="text" value={regForm.department}
+                      onChange={e => setRegForm({ ...regForm, department: e.target.value })}
+                      placeholder="Pharmacy" style={inputStyle}
+                      onFocus={e => e.target.style.border = "1px solid #00B5AD"}
+                      onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.12)"} />
+                  </div>
+                </div>
+                <div>
+                  <label style={labelStyle}>Password * <span style={{ color: "rgba(255,255,255,0.3)", fontWeight: 400 }}>(min. 6 characters)</span></label>
+                  <input type="password" required minLength={6} value={regForm.password}
+                    onChange={e => setRegForm({ ...regForm, password: e.target.value })}
+                    placeholder="••••••••" style={inputStyle}
+                    onFocus={e => e.target.style.border = "1px solid #00B5AD"}
+                    onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.12)"} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Confirm password *</label>
+                  <input type="password" required minLength={6} value={regForm.confirmPassword}
+                    onChange={e => setRegForm({ ...regForm, confirmPassword: e.target.value })}
+                    placeholder="••••••••" style={{ ...inputStyle, borderColor: regForm.confirmPassword && regForm.confirmPassword !== regForm.password ? "#ef4444" : "rgba(255,255,255,0.12)" }}
+                    onFocus={e => e.target.style.border = "1px solid #00B5AD"}
+                    onBlur={e => e.target.style.border = `1px solid ${regForm.confirmPassword && regForm.confirmPassword !== regForm.password ? "#ef4444" : "rgba(255,255,255,0.12)"}`} />
+                  {regForm.confirmPassword && regForm.confirmPassword !== regForm.password && (
+                    <p style={{ fontSize: 11, color: "#ef4444", marginTop: 4 }}>Passwords do not match</p>
+                  )}
+                </div>
+                <button type="submit" disabled={loading} style={{
+                  marginTop: 4, padding: "12px",
+                  background: "linear-gradient(135deg,#00C5BC,#00A09A)",
+                  color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700,
+                  cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1,
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  boxShadow: "0 4px 12px rgba(0,181,173,0.35)", transition: "all 0.15s",
+                }}>
+                  {loading ? "Creating account..." : "Create account →"}
+                </button>
+              </form>
+              <p style={{ marginTop: 16, textAlign: "center", fontSize: 12.5, color: "rgba(255,255,255,0.35)" }}>
+                Already have an account?{" "}
+                <button onClick={() => setTab("login")} style={{ color: "#00B5AD", background: "none", border: "none", cursor: "pointer", fontWeight: 700, fontSize: 12.5 }}>
+                  Sign in
+                </button>
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>

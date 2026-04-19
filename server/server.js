@@ -12,6 +12,9 @@
 
 // const app = express();
 
+// // Trust proxy — fixes rate-limit X-Forwarded-For warning in local dev
+// app.set("trust proxy", 1);
+
 // // ── Security & Middleware ─────────────────────────────────────
 // app.use(
 //   cors({
@@ -109,15 +112,13 @@ const connectDB = require("./config/db");
 const errorHandler = require("./middleware/errorHandler");
 const { runAlertScan } = require("./utils/alertEngine");
 
-// ── Connect to MongoDB ────────────────────────────────────────
 connectDB();
 
 const app = express();
 
-// Trust proxy — fixes rate-limit X-Forwarded-For warning in local dev
+// ── FIX 1: Trust proxy — stops the X-Forwarded-For warning ───
 app.set("trust proxy", 1);
 
-// ── Security & Middleware ─────────────────────────────────────
 app.use(
   cors({
     origin: process.env.CLIENT_URL || "http://localhost:3000",
@@ -128,27 +129,32 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// Rate limiting — 100 requests per 15 min per IP
+// ── FIX 1: Relaxed rate limit — 500 req / 15 min (was 100) ───
+// Local dev generates many requests from React hot-reload + polling
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: process.env.NODE_ENV === "production" ? 150 : 500,
+  standardHeaders: true,
+  legacyHeaders: false,
   message: {
     success: false,
-    message: "Too many requests. Please try again later.",
+    message: "Too many requests. Please wait a moment.",
+  },
+  skip: (req) => {
+    // Never rate-limit health checks
+    return req.path === "/" || req.path === "/api/health";
   },
 });
 app.use("/api/", limiter);
 
-// ── Health check ──────────────────────────────────────────────
+// ── Health check ───────────────────────────────────────────────
 app.get("/", (req, res) => {
   res.json({
     success: true,
     message: "TrackMed API is running 🚀",
     version: "1.0.0",
-    environment: process.env.NODE_ENV,
   });
 });
-
 app.get("/api/health", (req, res) => {
   res.json({
     success: true,
@@ -158,38 +164,38 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// ── Routes ────────────────────────────────────────────────────
+// ── Routes ─────────────────────────────────────────────────────
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/medicines", require("./routes/medicines"));
 app.use("/api/alerts", require("./routes/alerts"));
 app.use("/api/predictions", require("./routes/predictions"));
 app.use("/api/reports", require("./routes/reports"));
 
-// ── 404 handler ───────────────────────────────────────────────
+// ── 404 ────────────────────────────────────────────────────────
 app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: `Route not found: ${req.method} ${req.originalUrl}`,
-  });
+  res
+    .status(404)
+    .json({
+      success: false,
+      message: `Route not found: ${req.method} ${req.originalUrl}`,
+    });
 });
 
-// ── Global error handler ──────────────────────────────────────
 app.use(errorHandler);
 
-// ── Cron Jobs ─────────────────────────────────────────────────
-// Run alert scan every day at 8:00 AM
+// ── Cron: daily alert scan at 8 AM ────────────────────────────
 cron.schedule("0 8 * * *", async () => {
   console.log("⏰ Running scheduled alert scan...");
   await runAlertScan();
 });
 
-// Also run at startup after a 3-second delay
+// Startup scan (3s delay)
 setTimeout(async () => {
   console.log("🔍 Running initial alert scan on startup...");
   await runAlertScan();
 }, 3000);
 
-// ── Start Server ──────────────────────────────────────────────
+// ── Start ──────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, () => {
   console.log(`\n🚀 TrackMed server running on port ${PORT}`);
@@ -197,7 +203,6 @@ const server = app.listen(PORT, () => {
   console.log(`🌐 URL: http://localhost:${PORT}\n`);
 });
 
-// Handle unhandled promise rejections
 process.on("unhandledRejection", (err) => {
   console.error("❌ Unhandled Rejection:", err.message);
   server.close(() => process.exit(1));
