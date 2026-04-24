@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useOutletContext } from "react-router-dom";
 import { medicineAPI } from "../api/services";
+import api from "../api/axios";
 import { PageHeader, SearchInput, EmptyState, PageLoader, ConfirmDialog } from "../components/ui";
 import {
   formatDate, getExpiryLabel, getExpiryPill, getStockPill,
@@ -56,18 +57,18 @@ function Modal({ open, onClose, title, children, footer, maxW = 640 }) {
   );
 }
 
-/* ── FIX 5: Medicine name autocomplete ──────────────────── */
+/* ── Medicine name search — queries FULL catalog from DB ────── */
 /**
- * Searches the database as the user types.
- * Shows medicines whose name starts with / contains the typed string.
- * Selecting a result autofills matching fields.
+ * Calls /api/catalog/search which searches ALL medicines in the database
+ * (the full seeded Kaggle dataset), not just ones already in inventory.
+ * Results are sorted: names starting with the query appear first.
  */
 function MedicineNameSearch({ value, onChange, onSelect }) {
   const [query,       setQuery]       = useState(value || "");
   const [suggestions, setSuggestions] = useState([]);
   const [open,        setOpen]        = useState(false);
   const [fetching,    setFetching]    = useState(false);
-  const debouncedQ = useDebounce(query, 280);
+  const debouncedQ = useDebounce(query, 250);
   const wrapRef    = useRef(null);
 
   /* Close on outside click */
@@ -77,22 +78,22 @@ function MedicineNameSearch({ value, onChange, onSelect }) {
     return () => document.removeEventListener("mousedown", h);
   }, []);
 
-  /* Fetch from DB whenever debounced query changes */
+  /* Search catalog as user types */
   useEffect(() => {
-    if (!debouncedQ || debouncedQ.trim().length < 1) {
-      setSuggestions([]); setOpen(false); return;
-    }
+    const q = debouncedQ.trim();
+    if (!q) { setSuggestions([]); setOpen(false); return; }
+
     let cancelled = false;
     (async () => {
       setFetching(true);
       try {
-        /* Search medicines whose name starts with / contains the query */
-        const { data } = await medicineAPI.getAll({ search: debouncedQ.trim(), limit: 10, sortBy: "name", order: "asc" });
+        // Hit the catalog endpoint — returns medicines from full DB
+        const { data } = await api.get("/catalog/search", { params: { q, limit: 12 } });
         if (!cancelled) {
           setSuggestions(data.medicines || []);
-          if ((data.medicines || []).length > 0) setOpen(true);
+          setOpen((data.medicines || []).length > 0);
         }
-      } catch { /* silent */ }
+      } catch { /* silent — user can still type manually */ }
       finally { if (!cancelled) setFetching(false); }
     })();
     return () => { cancelled = true; };
@@ -128,7 +129,7 @@ function MedicineNameSearch({ value, onChange, onSelect }) {
           onFocus={() => suggestions.length > 0 && setOpen(true)}
           className="input-base"
           style={{ paddingLeft: 34, paddingRight: 32 }}
-          placeholder="Start typing medicine name..."
+          placeholder="Type medicine name to search..."
           autoComplete="off"
         />
         {fetching && (
@@ -147,10 +148,11 @@ function MedicineNameSearch({ value, onChange, onSelect }) {
           background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb",
           boxShadow: "0 16px 40px rgba(0,0,0,0.14)", zIndex: 9999, overflow: "hidden",
         }}>
-          <div style={{ padding: "7px 14px 4px", fontSize: 10, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: "1px solid #f8fafc" }}>
-            {suggestions.length} result{suggestions.length !== 1 ? "s" : ""} — click to autofill
+          <div style={{ padding: "7px 14px 4px", fontSize: 10, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: "1px solid #f8fafc", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span>{suggestions.length} medicine{suggestions.length !== 1 ? "s" : ""} found</span>
+            <span style={{ color: "#00B5AD", fontWeight: 500, textTransform: "none", fontSize: 10 }}>click to autofill →</span>
           </div>
-          <div style={{ maxHeight: 240, overflowY: "auto" }}>
+          <div style={{ maxHeight: 260, overflowY: "auto" }}>
             {suggestions.map((med) => (
               <button
                 key={med._id}
@@ -160,17 +162,15 @@ function MedicineNameSearch({ value, onChange, onSelect }) {
                   width: "100%", display: "flex", alignItems: "center", gap: 12,
                   padding: "10px 14px", border: "none", background: "transparent",
                   cursor: "pointer", textAlign: "left", transition: "background 0.1s",
+                  borderBottom: "1px solid #f8fafc",
                 }}
                 onMouseEnter={e => e.currentTarget.style.background = "#f0fffe"}
                 onMouseLeave={e => e.currentTarget.style.background = "transparent"}
               >
-                {/* Icon */}
                 <div style={{ width: 34, height: 34, borderRadius: 9, background: "linear-gradient(135deg,#e0f7f6,#b2f0ee)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16 }}>
                   💊
                 </div>
-                {/* Info */}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  {/* Highlight matching part */}
                   <div style={{ fontSize: 13, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {med.name}
                   </div>
@@ -178,19 +178,16 @@ function MedicineNameSearch({ value, onChange, onSelect }) {
                     {[med.manufacturerName, med.category, med.genericName || med.composition1].filter(Boolean).join(" · ")}
                   </div>
                 </div>
-                {/* Stock badge */}
-                <span style={{
-                  fontSize: 10, padding: "2px 8px", borderRadius: 20, fontWeight: 700, flexShrink: 0,
-                  background: med.quantity === 0 ? "#fee2e2" : med.quantity <= med.lowStockThreshold ? "#fef3c7" : "#d1fae5",
-                  color:      med.quantity === 0 ? "#991b1b" : med.quantity <= med.lowStockThreshold ? "#92400e" : "#065f46",
-                }}>
-                  {med.quantity} {med.unit || "units"}
-                </span>
+                {med.price > 0 && (
+                  <span style={{ fontSize: 11, color: "#64748b", fontFamily: "monospace", flexShrink: 0 }}>
+                    ₹{med.price}
+                  </span>
+                )}
               </button>
             ))}
           </div>
-          <div style={{ padding: "6px 14px 10px", fontSize: 11, color: "#94a3b8", borderTop: "1px solid #f8fafc", background: "#fafafa" }}>
-            💡 Selecting autofills fields — you can still edit before saving
+          <div style={{ padding: "6px 14px 8px", fontSize: 11, color: "#94a3b8", background: "#fafafa" }}>
+            💡 Can't find it? Type the full name to add a new medicine manually
           </div>
         </div>
       )}

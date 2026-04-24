@@ -65,6 +65,7 @@ app.use("/api/medicines", require("./routes/medicines"));
 app.use("/api/alerts", require("./routes/alerts"));
 app.use("/api/predictions", require("./routes/predictions"));
 app.use("/api/reports", require("./routes/reports"));
+app.use("/api/catalog", require("./routes/catalog"));
 
 // ── 404 ────────────────────────────────────────────────────────
 app.use((req, res) => {
