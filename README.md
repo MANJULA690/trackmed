@@ -1,6 +1,6 @@
 # TrackMed
 
-Hospital Pharmacy Inventory Management System · MERN Stack (MongoDB + Express + React + Node.js)
+Full-stack MERN hospital pharmacy management system automating medicine inventory tracking, expiry monitoring, real-time alerts, and ML-based demand prediction.
 
 ---
 
