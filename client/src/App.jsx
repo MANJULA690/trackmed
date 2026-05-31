@@ -20,7 +20,7 @@ export default function App() {
           toastOptions={{
             duration: 3500,
             style: {
-              fontFamily: "\'Plus Jakarta Sans\', sans-serif",
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
               fontSize: "13px",
               borderRadius: "12px",
               border: "1px solid #e5e7eb",

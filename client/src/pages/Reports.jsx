@@ -352,7 +352,7 @@ function TransactionReport() {
   const [startDate, setStartDate] = useState("");
   const [endDate,   setEndDate]   = useState("");
   const [type,      setType]      = useState("");
-  const [triggered, setTriggered] = useState(false);
+  const [triggered] = useState(false);
 
   const { data, loading } = useFetch(
     () => reportAPI.transactions({ startDate, endDate, type }),
