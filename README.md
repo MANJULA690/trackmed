@@ -1,6 +1,7 @@
 # TrackMed
 
-Full-stack MERN hospital pharmacy management system automating medicine inventory tracking, expiry monitoring, real-time alerts, and ML-based demand prediction.
+- Full-stack MERN hospital pharmacy management system automating medicine inventory tracking, expiry monitoring, real-time alerts, and ML-based demand prediction.
+- [Live Link](https://trackmedd.netlify.app/)
 
 ---
 
