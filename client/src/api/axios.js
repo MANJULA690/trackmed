@@ -2,7 +2,7 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || "/api",
-  timeout: 15000,
+  timeout: 35000,
 });
 
 // Attach JWT token to every request
@@ -22,7 +22,7 @@ api.interceptors.response.use(
       window.location.href = "/login";
     }
     return Promise.reject(err);
-  }
+  },
 );
 
 export default api;
