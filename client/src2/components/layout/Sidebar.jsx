@@ -23,11 +23,10 @@ const ChevronR  = (p) => <Ic {...p} d="M9 18l6-6-6-6" />;
 const KeyIcon   = (p) => <Ic {...p} d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />;
 const OutIcon   = (p) => <Ic {...p} d={<><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></>} />;
 const XIcon     = (p) => <Ic {...p} d={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />;
-const PlusIcon  = (p) => <Ic {...p} d={<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>} />;
 
 const NAV = [
   { to: "/",            label: "Dashboard",   icon: GridIcon },
-  { to: "/inventory",   label: "Products",    icon: BoxIcon },
+  { to: "/inventory",   label: "Inventory",   icon: BoxIcon },
   { to: "/alerts",      label: "Alerts",      icon: BellIcon, badge: true },
   { to: "/predictions", label: "Predictions", icon: TrendIcon },
   { to: "/reports",     label: "Reports",     icon: FileIcon },
@@ -60,6 +59,9 @@ function SettingsModal({ open, onClose, user }) {
     } finally { setSaving(false); }
   };
 
+  const roleColor = user?.role === "admin" ? "#7c3aed" : user?.role === "pharmacist" ? "#00857f" : "#6b7280";
+  const roleBg    = user?.role === "admin" ? "#f3e8ff" : user?.role === "pharmacist" ? "#ccfbf1" : "#f3f4f6";
+
   return createPortal(
     <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
       <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }} onClick={onClose} />
@@ -70,39 +72,50 @@ function SettingsModal({ open, onClose, user }) {
         display: "flex", flexDirection: "column",
         animation: "scaleIn 0.2s cubic-bezier(.22,1,.36,1) both",
       }}>
+        {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 22px", borderBottom: "1px solid #f1f5f9" }}>
           <div style={{ fontFamily: "'Outfit',sans-serif", fontSize: 17, fontWeight: 800, color: "#0f172a" }}>Account Settings</div>
           <button onClick={onClose} style={{ border: "none", background: "none", cursor: "pointer", color: "#9ca3af", padding: 4, borderRadius: 8 }}>
             <XIcon size={16} />
           </button>
         </div>
+        {/* Tabs */}
         <div style={{ display: "flex", gap: 4, padding: "10px 22px 0", borderBottom: "1px solid #f1f5f9" }}>
           {[["profile", "Profile"], ["password", "Change Password"]].map(([k, l]) => (
             <button key={k} onClick={() => setTab(k)} style={{
               padding: "8px 14px", borderRadius: "10px 10px 0 0", border: "none",
               background: tab === k ? "#f8fafc" : "transparent",
-              borderBottom: tab === k ? "2px solid #6C47FF" : "2px solid transparent",
+              borderBottom: tab === k ? "2px solid #00B5AD" : "2px solid transparent",
               fontSize: 13, fontWeight: 600, cursor: "pointer",
-              color: tab === k ? "#6C47FF" : "#64748b",
+              color: tab === k ? "#00B5AD" : "#64748b",
               transition: "all 0.15s",
             }}>{l}</button>
           ))}
         </div>
+        {/* Body */}
         <div style={{ overflow: "auto", flex: 1, padding: "22px" }}>
           {tab === "profile" && (
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24, padding: 18, background: "linear-gradient(135deg,#f0eeff,#f8f7ff)", borderRadius: 16, border: "1px solid #ede9ff" }}>
-                <div style={{ width: 56, height: 56, borderRadius: "50%", background: "linear-gradient(135deg, #6C47FF, #a78bfa)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 20, fontWeight: 800, boxShadow: "0 4px 14px rgba(108,71,255,0.35)" }}>
+              {/* Avatar + name */}
+              <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24, padding: 18, background: "linear-gradient(135deg,#f0fffe,#f8faff)", borderRadius: 16, border: "1px solid #e0f7f6" }}>
+                <div style={{
+                  width: 56, height: 56, borderRadius: "50%",
+                  background: "linear-gradient(135deg, #00C5BC, #0077b6)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: "#fff", fontSize: 20, fontWeight: 800,
+                  boxShadow: "0 4px 14px rgba(0,181,173,0.35)",
+                }}>
                   {getInitials(user?.name || "U")}
                 </div>
                 <div>
                   <div style={{ fontWeight: 700, color: "#0f172a", fontSize: 16 }}>{user?.name}</div>
                   <div style={{ color: "#64748b", fontSize: 12.5, marginTop: 2 }}>{user?.email}</div>
-                  <span style={{ display: "inline-block", marginTop: 5, fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 20, background: "#ede9ff", color: "#6C47FF" }}>
+                  <span style={{ display: "inline-block", marginTop: 5, fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 20, background: roleBg, color: roleColor }}>
                     {user?.role}
                   </span>
                 </div>
               </div>
+              {/* Details */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 {[
                   ["Department", user?.department || "—"],
@@ -144,7 +157,7 @@ function SettingsModal({ open, onClose, user }) {
 }
 
 /* ── Sidebar ─────────────────────────────────────────────────── */
-export default function Sidebar({ alertCount = 0, collapsed, onToggle, onQuickAdd }) {
+export default function Sidebar({ alertCount = 0, collapsed, onToggle }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -152,6 +165,7 @@ export default function Sidebar({ alertCount = 0, collapsed, onToggle, onQuickAd
   const [settingsOpen, setSettingsOpen] = useState(false);
   const profileRef = useRef(null);
 
+  // Close profile dropdown on outside click
   useEffect(() => {
     const handler = (e) => {
       if (profileRef.current && !profileRef.current.contains(e.target)) setProfileOpen(false);
@@ -160,6 +174,7 @@ export default function Sidebar({ alertCount = 0, collapsed, onToggle, onQuickAd
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // Close on route change
   useEffect(() => { setProfileOpen(false); }, [location]);
 
   const handleLogout = () => { logout(); navigate("/login"); };
@@ -171,83 +186,58 @@ export default function Sidebar({ alertCount = 0, collapsed, onToggle, onQuickAd
       <aside style={{
         position: "fixed", inset: "0 auto 0 0", width: W, zIndex: 30,
         display: "flex", flexDirection: "column",
-        background: "#fff",
-        borderRight: "1px solid #ede9ff",
+        background: "linear-gradient(180deg, #0d2d4e 0%, #091e36 100%)",
+        borderRight: "1px solid rgba(255,255,255,0.05)",
         transition: "width 0.28s cubic-bezier(.22,1,.36,1)",
         overflow: "hidden",
-        boxShadow: "2px 0 16px rgba(108,71,255,0.06)",
       }}>
 
         {/* Logo + toggle */}
-        <div style={{ padding: collapsed ? "20px 0" : "22px 20px 18px", borderBottom: "1px solid #f0eeff", display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "space-between" }}>
+        <div style={{ padding: collapsed ? "20px 0" : "22px 20px 18px", borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "space-between" }}>
           {!collapsed && (
             <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#6C47FF,#a78bfa)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 14px rgba(108,71,255,0.4)", flexShrink: 0 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#00C5BC,#007f7b)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 14px rgba(0,181,173,0.4)", flexShrink: 0 }}>
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2">
                   <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
                 </svg>
               </div>
               <div>
-                <div style={{ fontFamily: "'Outfit',sans-serif", fontSize: 18, fontWeight: 800, color: "#1a1060", letterSpacing: "-0.3px", lineHeight: 1 }}>
-                  Track<span style={{ color: "#6C47FF" }}>Med</span>
+                <div style={{ fontFamily: "'Outfit',sans-serif", fontSize: 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.3px", lineHeight: 1 }}>
+                  Track<span style={{ color: "#4dd4cf" }}>Med</span>
                 </div>
-                <div style={{ fontSize: 10, color: "#b0a8d0", marginTop: 2, letterSpacing: "0.08em" }}>PHARMACY SYSTEM</div>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 2, letterSpacing: "0.08em" }}>PHARMACY SYSTEM</div>
               </div>
             </div>
           )}
           {collapsed && (
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#6C47FF,#a78bfa)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 14px rgba(108,71,255,0.4)" }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#00C5BC,#007f7b)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 14px rgba(0,181,173,0.4)" }}>
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2">
                 <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
               </svg>
             </div>
           )}
           {!collapsed && (
-            <button onClick={onToggle} title="Collapse sidebar" style={{ border: "none", background: "#f8f7ff", color: "#6C47FF", borderRadius: 8, width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.15s", flexShrink: 0 }}>
+            <button onClick={onToggle} title="Collapse sidebar" style={{ border: "none", background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.5)", borderRadius: 8, width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.15s", flexShrink: 0 }}>
               <ChevronL size={14} />
             </button>
           )}
-        </div>
-
-        {/* Quick Add button */}
-        <div style={{ padding: collapsed ? "12px 10px" : "14px 16px" }}>
-          <button
-            onClick={() => { navigate("/inventory"); if (onQuickAdd) onQuickAdd(); }}
-            style={{
-              width: "100%",
-              display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "flex-start",
-              gap: 8,
-              padding: collapsed ? "10px 0" : "10px 14px",
-              background: "#6C47FF",
-              color: "#fff",
-              border: "none",
-              borderRadius: 12,
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontSize: 13, fontWeight: 700,
-              cursor: "pointer",
-              boxShadow: "0 4px 12px rgba(108,71,255,0.35)",
-              transition: "all 0.15s",
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = "#5434d4"; e.currentTarget.style.boxShadow = "0 6px 18px rgba(108,71,255,0.45)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "#6C47FF"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(108,71,255,0.35)"; }}
-          >
-            <PlusIcon size={15} />
-            {!collapsed && <span>+ Quick add</span>}
-          </button>
+          {collapsed && (
+            <div></div>
+          )}
         </div>
 
         {/* Expand button when collapsed */}
         {collapsed && (
-          <div style={{ display: "flex", justifyContent: "center", paddingTop: 4 }}>
-            <button onClick={onToggle} title="Expand sidebar" style={{ border: "none", background: "#f8f7ff", color: "#6C47FF", borderRadius: 8, width: 32, height: 28, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+          <div style={{ display: "flex", justifyContent: "center", paddingTop: 10 }}>
+            <button onClick={onToggle} title="Expand sidebar" style={{ border: "none", background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.5)", borderRadius: 8, width: 32, height: 28, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
               <ChevronR size={14} />
             </button>
           </div>
         )}
 
         {/* Nav */}
-        <nav style={{ flex: 1, padding: collapsed ? "8px 10px" : "8px 12px", overflowY: "auto", overflowX: "hidden" }}>
-          {!collapsed && <div className="section-label" style={{ marginTop: 0 }}>Main Menu</div>}
+        <nav style={{ flex: 1, padding: collapsed ? "14px 10px" : "14px 12px", overflowY: "auto", overflowX: "hidden" }}>
+          {!collapsed && <div className="section-label" style={{ marginTop: 0 }}>Main</div>}
 
           {NAV.map(({ to, label, icon: Icon, badge }) => (
             <NavLink key={to} to={to} end={to === "/"}
@@ -271,14 +261,14 @@ export default function Sidebar({ alertCount = 0, collapsed, onToggle, onQuickAd
                 </span>
               )}
               {collapsed && badge && alertCount > 0 && (
-                <span style={{ position: "absolute", top: 6, right: 8, width: 7, height: 7, background: "#ef4444", borderRadius: "50%", boxShadow: "0 0 0 2px #fff" }} />
+                <span style={{ position: "absolute", top: 6, right: 8, width: 7, height: 7, background: "#ef4444", borderRadius: "50%", boxShadow: "0 0 0 2px #091e36" }} />
               )}
             </NavLink>
           ))}
         </nav>
 
         {/* User footer */}
-        <div style={{ padding: collapsed ? "12px 10px" : "12px", borderTop: "1px solid #f0eeff", position: "relative" }} ref={profileRef}>
+        <div style={{ padding: collapsed ? "12px 10px" : "12px", borderTop: "1px solid rgba(255,255,255,0.07)", position: "relative" }} ref={profileRef}>
           <div
             onClick={() => setProfileOpen(o => !o)}
             title={collapsed ? user?.name : undefined}
@@ -288,21 +278,21 @@ export default function Sidebar({ alertCount = 0, collapsed, onToggle, onQuickAd
               justifyContent: collapsed ? "center" : "flex-start",
               padding: collapsed ? "8px 0" : "10px 10px",
               borderRadius: 12,
-              background: profileOpen ? "#f8f7ff" : "rgba(108,71,255,0.04)",
-              border: "1px solid #ede9ff",
+              background: profileOpen ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.06)",
               cursor: "pointer", transition: "all 0.15s",
             }}
           >
-            <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#6C47FF,#a78bfa)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 12, fontWeight: 700, flexShrink: 0, boxShadow: "0 2px 8px rgba(108,71,255,0.3)" }}>
+            <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#00C5BC,#0077b6)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 12, fontWeight: 700, flexShrink: 0, boxShadow: "0 2px 8px rgba(0,181,173,0.3)" }}>
               {getInitials(user?.name || "U")}
             </div>
             {!collapsed && (
               <>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ color: "#1a1060", fontSize: 12.5, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{user?.name || "User"}</div>
-                  <div style={{ color: "#b0a8d0", fontSize: 11, textTransform: "capitalize" }}>{user?.role}</div>
+                  <div style={{ color: "#fff", fontSize: 12.5, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{user?.name || "User"}</div>
+                  <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, textTransform: "capitalize" }}>{user?.role}</div>
                 </div>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#b0a8d0" strokeWidth="2" style={{ transform: profileOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s", flexShrink: 0 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2" style={{ transform: profileOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s", flexShrink: 0 }}>
                   <polyline points="6 9 12 15 18 9"/>
                 </svg>
               </>
@@ -315,20 +305,21 @@ export default function Sidebar({ alertCount = 0, collapsed, onToggle, onQuickAd
               position: "absolute", bottom: "calc(100% - 4px)", left: collapsed ? 68 : 12, right: collapsed ? "auto" : 12,
               width: collapsed ? 200 : "auto",
               background: "#fff", borderRadius: 14,
-              boxShadow: "0 -8px 32px rgba(108,71,255,0.12)", border: "1px solid #ede9ff",
+              boxShadow: "0 -8px 32px rgba(0,0,0,0.16)", border: "1px solid #e5e7eb",
               overflow: "hidden",
               animation: "fadeUp 0.2s cubic-bezier(.22,1,.36,1) both",
             }}>
-              <div style={{ padding: "14px 16px", background: "linear-gradient(135deg,#f8f7ff,#fff)", borderBottom: "1px solid #ede9ff" }}>
+              {/* User info strip */}
+              <div style={{ padding: "14px 16px", background: "linear-gradient(135deg,#f0fffe,#f8faff)", borderBottom: "1px solid #e5e7eb" }}>
                 <div style={{ fontWeight: 700, color: "#0f172a", fontSize: 13 }}>{user?.name}</div>
                 <div style={{ color: "#64748b", fontSize: 11, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.email}</div>
               </div>
               <div style={{ padding: "6px" }}>
                 <button onClick={() => { setSettingsOpen(true); setProfileOpen(false); }}
                   style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, border: "none", background: "transparent", color: "#374151", fontSize: 13, fontWeight: 500, cursor: "pointer", transition: "background 0.1s", textAlign: "left" }}
-                  onMouseEnter={e => e.currentTarget.style.background = "#f8f7ff"}
+                  onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
                   onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                  <KeyIcon size={14} />
+                  <KeyIcon size={14} style={{ color: "#9ca3af" }} />
                   Account Settings
                 </button>
                 <div style={{ height: 1, background: "#f1f5f9", margin: "4px 0" }} />

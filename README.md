@@ -28,8 +28,7 @@ npm install
 Configure environment:
 
 ```bash
-cp .env.example .env
-# Open .env and fill in your MongoDB Atlas URI and JWT secret
+# Create .env and fill in your MongoDB Atlas URI and JWT secret
 ```
 
 Seed the database:
