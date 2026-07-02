@@ -140,11 +140,11 @@ export default function Login() {
               </div>
               <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
                 <Field label="E-mail">
-                  <Input type="email" required placeholder="jhon.doe@gmail.com" value={loginForm.email}
+                  <Input type="email" required placeholder="Enter your email" value={loginForm.email}
                     onChange={e => setLoginForm({ ...loginForm, email: e.target.value })} />
                 </Field>
                 <Field label="Password">
-                  <Input type="password" required placeholder="••••••••••••" value={loginForm.password}
+                  <Input type="password" required placeholder="Enter your password" value={loginForm.password}
                     onChange={e => setLoginForm({ ...loginForm, password: e.target.value })} />
                 </Field>
                 <div style={{ textAlign: "right", marginTop: -10 }}>
@@ -185,7 +185,7 @@ export default function Login() {
                     onChange={e => setRegForm({ ...regForm, name: e.target.value })} />
                 </Field>
                 <Field label="E-mail">
-                  <Input type="email" required placeholder="jhon.doe@gmail.com" value={regForm.email}
+                  <Input type="email" required placeholder="Enter your email" value={regForm.email}
                     onChange={e => setRegForm({ ...regForm, email: e.target.value })} />
                 </Field>
                 <Field label="Company Name">
